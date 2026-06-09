@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -34,7 +35,6 @@
     .toast-out{animation:slideOutRight .3s ease forwards}
     input,select,textarea{outline:none;transition:border-color .15s,box-shadow .15s}
     input:focus,select:focus,textarea:focus{border-color:#6366F1!important;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
-    .pill-active{background:#4F46E5!important;color:#fff!important;border-color:#4F46E5!important}
     .row-hover:hover{background:#F8FAFC}
     .table-wrap{overflow-x:auto}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -45,15 +45,27 @@
     select.input-form{appearance:auto}
     .kpi-card{cursor:pointer;transition:all .15s}
     .kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
-    .kpi-card.active{border-color:#4F46E5;box-shadow:0 0 0 3px rgba(99,102,241,.15)}
-    /* tela de login */
+    .kpi-card.ativo{border-color:#4F46E5!important;box-shadow:0 0 0 3px rgba(99,102,241,.15)!important}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     #tela-login{animation:fadeIn .3s ease}
+    /* filtro select customizado */
+    .filtro-select{
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right .6rem center;
+      padding-right:2rem;
+    }
+    .filtro-select.ativo{
+      border-color:#4F46E5;
+      background-color:#EEF2FF;
+      color:#4F46E5;
+      font-weight:600;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
-<!-- ══ TOAST ══════════════════════════════════════════════ -->
 <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
 <!-- ══════════════════════════════════════════════════════ -->
@@ -64,8 +76,7 @@
     <div class="flex items-center gap-3 mb-8">
       <div class="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center">
         <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
         </svg>
       </div>
       <div>
@@ -73,16 +84,12 @@
         <p class="text-xs text-gray-400 mt-0.5">Contratos Fechados</p>
       </div>
     </div>
-
     <h1 class="text-lg font-semibold text-gray-900 mb-1">Bem-vinda 👋</h1>
     <p class="text-sm text-gray-500 mb-6">Selecione seu nome e informe sua senha.</p>
-
     <div class="space-y-4">
       <div>
         <label class="label-form">Seu nome</label>
-        <select id="login-nome" class="input-form">
-          <option value="">— Selecione —</option>
-        </select>
+        <select id="login-nome" class="input-form"><option value="">— Selecione —</option></select>
       </div>
       <div>
         <label class="label-form">Senha</label>
@@ -91,7 +98,7 @@
             onkeydown="if(event.key==='Enter') fazerLogin()"/>
           <button type="button" onclick="toggleSenha()"
             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-            <svg id="eye-icon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
@@ -107,15 +114,12 @@
         </svg>
       </button>
     </div>
-
-    <p class="text-[11px] text-gray-400 text-center mt-6">
-      Primeiro acesso? Peça sua senha à Dra. Jucineide.
-    </p>
+    <p class="text-[11px] text-gray-400 text-center mt-6">Primeiro acesso? Peça sua senha à Dra. Jucineide.</p>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
-<!--  APP PRINCIPAL (oculto até login)                     -->
+<!--  APP                                                  -->
 <!-- ══════════════════════════════════════════════════════ -->
 <div id="app" class="hidden">
 
@@ -125,8 +129,7 @@
       <div class="flex items-center gap-3">
         <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
           <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
         <div>
@@ -134,29 +137,30 @@
           <span class="block text-[10px] text-gray-400 leading-none mt-0.5 uppercase tracking-wide">Contratos Fechados</span>
         </div>
       </div>
-
       <div class="flex items-center gap-2">
         <div id="conn-badge" class="hidden items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-full">
           <span id="conn-dot" class="w-1.5 h-1.5 rounded-full"></span>
           <span id="conn-text"></span>
         </div>
-
-        <!-- Usuário logado -->
         <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
           <div class="w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center text-[10px] font-bold text-brand-700" id="user-avatar"></div>
           <span class="text-xs font-medium text-gray-700" id="user-label"></span>
         </div>
-
-        <!-- Gerenciar Equipe (só admin) -->
+        <!-- Relatório -->
+        <button onclick="abrirRelatorio()" title="Relatório"
+          class="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </button>
+        <!-- Equipe (admin) -->
         <button id="btn-equipe" onclick="abrirEquipe()" title="Gerenciar Equipe"
           class="hidden p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 100-6 3 3 0 000 6zM3 14a3 3 0 100-6 3 3 0 000 6z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 100-6 3 3 0 000 6zM3 14a3 3 0 100-6 3 3 0 000 6z"/>
           </svg>
         </button>
-
-        <!-- Novo Contrato -->
+        <!-- Novo -->
         <button onclick="abrirModal()"
           class="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -164,7 +168,6 @@
           </svg>
           <span class="hidden sm:inline">Novo Contrato</span>
         </button>
-
         <!-- Sair -->
         <button onclick="sair()" title="Sair"
           class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
@@ -177,66 +180,107 @@
   </header>
 
   <!-- MAIN -->
-  <main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+  <main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-    <!-- KPI CARDS (clicáveis) -->
-    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarPorStatus('')">
+    <!-- KPIs — 3 cards -->
+    <section class="grid grid-cols-3 gap-3">
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('')">
         <p class="text-xs text-gray-400 font-medium">Total de Contratos</p>
         <p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-total">0</p>
-        <p class="text-[11px] text-gray-400 mt-1">Clique para ver todos</p>
+        <p class="text-[11px] text-gray-400 mt-1">Ver todos</p>
       </div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarPorStatus('CONCEDIDO')">
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('CONCEDIDO')">
         <p class="text-xs text-gray-400 font-medium">Concedidos</p>
         <p class="text-2xl font-bold text-green-600 mt-0.5" id="kpi-concedidos">0</p>
-        <p class="text-[11px] text-gray-400 mt-1">Clique para ver lista</p>
+        <p class="text-[11px] text-gray-400 mt-1">Ver lista</p>
       </div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarPorStatus('EM ANDAMENTO')">
-        <p class="text-xs text-gray-400 font-medium">Em Andamento</p>
-        <p class="text-2xl font-bold text-amber-600 mt-0.5" id="kpi-andamento">0</p>
-        <p class="text-[11px] text-gray-400 mt-1">Clique para ver lista</p>
-      </div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarPorStatus('GUIA NÃO PAGA')">
-        <p class="text-xs text-gray-400 font-medium">Guia Não Paga</p>
-        <p class="text-2xl font-bold text-red-600 mt-0.5" id="kpi-guia">0</p>
-        <p class="text-[11px] text-gray-400 mt-1">Clique para ver lista</p>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('PROTOCOLADO')">
+        <p class="text-xs text-gray-400 font-medium">Protocolados</p>
+        <p class="text-2xl font-bold text-amber-600 mt-0.5" id="kpi-protocolado">0</p>
+        <p class="text-[11px] text-gray-400 mt-1">Ver lista</p>
       </div>
     </section>
 
-    <!-- FILTROS -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-      <div class="relative">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z"/>
-        </svg>
-        <input id="busca" type="text"
-          placeholder="Buscar por nome, protocolo, telefone…"
-          class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50"
-          oninput="aplicarFiltros()"/>
-      </div>
+    <!-- FILTROS REESTRUTURADOS -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <!-- Linha 1: busca + closer + status -->
+      <div class="flex flex-wrap gap-2 items-center">
+        <!-- Busca -->
+        <div class="relative flex-1 min-w-[200px]">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z"/>
+          </svg>
+          <input id="busca" type="text" placeholder="Buscar por nome, protocolo ou telefone…"
+            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50"
+            oninput="aplicarFiltros()"/>
+        </div>
 
-      <div class="flex flex-wrap gap-x-4 gap-y-2 items-start">
         <!-- Closer -->
-        <div class="flex items-center gap-1 flex-wrap">
-          <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide mr-1">Closer</span>
-          <div id="pills-closer" class="flex flex-wrap gap-1"></div>
-        </div>
-        <div class="w-px h-5 bg-gray-200 hidden sm:block mx-1 mt-1"></div>
-        <!-- Demanda -->
-        <div class="flex items-center gap-1 flex-wrap">
-          <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide mr-1">Benefício</span>
-          <div id="pills-demanda" class="flex flex-wrap gap-1"></div>
-        </div>
+        <select id="sel-closer" onchange="aplicarFiltros()"
+          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[130px]">
+          <option value="">Todos os closers</option>
+        </select>
+
         <!-- Status -->
-        <div class="flex items-center gap-1 flex-wrap">
-          <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide mr-1 ml-2">Status</span>
-          <div id="pills-status" class="flex flex-wrap gap-1"></div>
-        </div>
+        <select id="sel-status" onchange="aplicarFiltros()"
+          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+          <option value="">Todos os status</option>
+          <option>EM ANDAMENTO</option>
+          <option>PROTOCOLADO</option>
+          <option>CONCEDIDO</option>
+          <option>INDEFERIDO</option>
+        </select>
+
+        <!-- Local -->
+        <select id="sel-local" onchange="aplicarFiltros()"
+          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+          <option value="">INSS e Justiça</option>
+          <option>INSS</option>
+          <option>JUSTIÇA</option>
+        </select>
+
+        <!-- Limpar -->
         <button id="btn-limpar" onclick="limparFiltros()"
-          class="ml-auto text-[11px] text-brand-600 hover:underline hidden mt-1">
+          class="hidden text-xs text-brand-600 hover:underline font-medium px-2">
           Limpar filtros
         </button>
+      </div>
+
+      <!-- Linha 2: Categoria + Benefício encadeado -->
+      <div class="flex flex-wrap gap-2 items-center mt-2.5 pt-2.5 border-t border-gray-100">
+        <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Área</span>
+
+        <!-- Categoria -->
+        <select id="sel-categoria" onchange="atualizarBeneficios()"
+          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+          <option value="">Todas as áreas</option>
+          <option value="PREVIDENCIÁRIO">Previdenciário</option>
+          <option value="CONSUMIDOR">Consumidor</option>
+          <option value="BANCÁRIO">Bancário</option>
+          <option value="TRABALHISTA">Trabalhista</option>
+        </select>
+
+        <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+
+        <!-- Benefício (populado via JS) -->
+        <select id="sel-beneficio" onchange="aplicarFiltros()"
+          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[200px]">
+          <option value="">Todos os benefícios</option>
+        </select>
+
+        <!-- Ordenar -->
+        <div class="ml-auto flex items-center gap-2">
+          <span class="text-[11px] text-gray-400 uppercase tracking-wide font-medium hidden sm:inline">Ordenar</span>
+          <select id="sort-select" onchange="aplicarFiltros()"
+            class="filtro-select text-xs border border-gray-200 rounded-lg py-2 pl-2 pr-7 bg-gray-50 text-gray-600">
+            <option value="fechamento_desc">Fechamento ↓</option>
+            <option value="fechamento_asc">Fechamento ↑</option>
+            <option value="nome_asc">Nome A–Z</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -244,15 +288,6 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <span id="total-label" class="text-sm text-gray-500">—</span>
-        <div class="flex items-center gap-2">
-          <span class="text-[11px] text-gray-400 uppercase tracking-wide font-medium hidden sm:inline">Ordenar</span>
-          <select id="sort-select" onchange="aplicarFiltros()"
-            class="text-xs border border-gray-200 rounded-md py-1 px-2 bg-gray-50 text-gray-600">
-            <option value="fechamento_desc">Fechamento ↓</option>
-            <option value="fechamento_asc">Fechamento ↑</option>
-            <option value="nome_asc">Nome A–Z</option>
-          </select>
-        </div>
       </div>
       <div class="table-wrap">
         <table class="w-full text-sm">
@@ -282,16 +317,14 @@
         </table>
       </div>
     </div>
-
   </main>
-</div><!-- /app -->
+</div>
 
-<!-- ══ MODAL: FORMULÁRIO CONTRATO ═════════════════════════ -->
+<!-- ══ MODAL CONTRATO ═════════════════════════════════════ -->
 <div id="modal-overlay"
   class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
   onclick="fecharModalFora(event)">
   <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-2xl my-auto">
-
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <div>
         <h2 id="modal-title" class="font-semibold text-gray-900">Novo Contrato</h2>
@@ -303,10 +336,8 @@
         </svg>
       </button>
     </div>
-
     <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
 
-      <!-- Identificação -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Identificação</legend>
         <div class="grid sm:grid-cols-2 gap-3">
@@ -337,7 +368,6 @@
         </div>
       </fieldset>
 
-      <!-- Datas -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Datas</legend>
         <div class="grid sm:grid-cols-3 gap-3">
@@ -351,41 +381,31 @@
           </div>
           <div>
             <label class="label-form">Tempo <span class="text-[10px] text-gray-400">(auto)</span></label>
-            <input id="f-tempo" type="text" readonly class="input-form bg-gray-50 text-gray-500 cursor-default" placeholder="— dias"/>
+            <input id="f-tempo" type="text" readonly class="input-form bg-gray-50 text-gray-500 cursor-default"/>
           </div>
         </div>
       </fieldset>
 
-      <!-- Processo -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Processo</legend>
         <div class="grid sm:grid-cols-2 gap-3">
           <div>
             <label class="label-form">Closer / Responsável *</label>
-            <select id="f-closer" class="input-form">
-              <option value="">— Selecione —</option>
-            </select>
+            <select id="f-closer" class="input-form"><option value="">— Selecione —</option></select>
           </div>
           <div>
-            <label class="label-form">Benefício / Demanda *</label>
-            <select id="f-demanda" class="input-form">
+            <label class="label-form">Área</label>
+            <select id="f-categoria" class="input-form" onchange="popularBeneficiosForm()">
               <option value="">— Selecione —</option>
-              <option>SALÁRIO MATERNIDADE</option>
-              <option>BPC LOAS</option>
-              <option>AUXÍLIO DOENÇA</option>
-              <option>APOSENTADORIA POR INVALIDEZ</option>
-              <option>APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO</option>
-              <option>APOSENTADORIA ESPECIAL</option>
-              <option>PENSÃO POR MORTE</option>
-              <option>AUXÍLIO-ACIDENTE</option>
-              <option>AUXÍLIO RECLUSÃO</option>
-              <option>MANDADO DE SEGURANÇA</option>
-              <option>REVISÃO DE BENEFÍCIO</option>
-              <option>REVISÃO CONTRATO BANCÁRIO</option>
-              <option>NEGATIVAÇÃO INDEVIDA</option>
-              <option>ACIDENTE DE TRABALHO</option>
-              <option>OUTRO</option>
+              <option value="PREVIDENCIÁRIO">Previdenciário</option>
+              <option value="CONSUMIDOR">Consumidor</option>
+              <option value="BANCÁRIO">Bancário</option>
+              <option value="TRABALHISTA">Trabalhista</option>
             </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label-form">Benefício / Demanda *</label>
+            <select id="f-demanda" class="input-form"><option value="">— Selecione a área primeiro —</option></select>
           </div>
           <div>
             <label class="label-form">Local</label>
@@ -398,16 +418,10 @@
           <div>
             <label class="label-form">Status</label>
             <select id="f-status" class="input-form">
-              <option value="">— Selecione —</option>
-              <option>EM ANDAMENTO</option>
-              <option>PROTOCOLADO</option>
-              <option>CONCEDIDO</option>
-              <option>GUIA NÃO PAGA</option>
-              <option>INDEFERIDO</option>
-              <option>RECURSO</option>
-              <option>AGUARDANDO DOCUMENTO</option>
-              <option>CANCELADO</option>
-              <option>NÃO SE APLICA</option>
+              <option value="EM ANDAMENTO">EM ANDAMENTO</option>
+              <option value="PROTOCOLADO">PROTOCOLADO</option>
+              <option value="CONCEDIDO">CONCEDIDO</option>
+              <option value="INDEFERIDO">INDEFERIDO</option>
             </select>
           </div>
           <div class="sm:col-span-2">
@@ -417,32 +431,26 @@
         </div>
       </fieldset>
 
-      <!-- Observações -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Observações</legend>
         <textarea id="f-obs" rows="3" class="input-form resize-y"
           placeholder="Histórico, andamento atual, documentos pendentes…"></textarea>
       </fieldset>
 
-      <!-- Auditoria (somente leitura, aparece na edição) -->
-      <div id="f-auditoria" class="hidden bg-gray-50 rounded-lg px-4 py-3 space-y-1.5">
+      <div id="f-auditoria" class="hidden bg-gray-50 rounded-lg px-4 py-3 space-y-1">
         <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Rastreamento</p>
         <p class="text-xs text-gray-500" id="f-criado-por"></p>
         <p class="text-xs text-gray-500" id="f-editado-por"></p>
       </div>
-
-    </div><!-- /corpo -->
-
+    </div>
     <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
       <button id="btn-excluir" onclick="excluirContrato()"
-        class="hidden text-sm text-red-500 hover:text-red-700 font-medium transition-colors">
-        Excluir
-      </button>
+        class="hidden text-sm text-red-500 hover:text-red-700 font-medium">Excluir</button>
       <div class="flex items-center gap-2 ml-auto">
         <button onclick="fecharModal()"
-          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancelar</button>
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
         <button id="btn-salvar" onclick="salvarContrato()"
-          class="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors">
+          class="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">
           <span id="btn-salvar-txt">Salvar</span>
           <svg id="btn-salvar-spin" class="hidden w-4 h-4 spinner" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -454,7 +462,7 @@
   </div>
 </div>
 
-<!-- ══ MODAL: DETALHE ═════════════════════════════════════ -->
+<!-- ══ MODAL DETALHE ══════════════════════════════════════ -->
 <div id="modal-detalhe"
   class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
   onclick="fecharDetalheFora(event)">
@@ -469,17 +477,89 @@
     </div>
     <div id="detalhe-body" class="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm space-y-2.5"></div>
     <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-      <button onclick="fecharDetalhe()"
-        class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Fechar</button>
-      <button onclick="editarDoDetalhe()"
-        class="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
-        Editar
-      </button>
+      <button onclick="fecharDetalhe()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Fechar</button>
+      <button onclick="editarDoDetalhe()" class="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">Editar</button>
     </div>
   </div>
 </div>
 
-<!-- ══ MODAL: GERENCIAR EQUIPE ════════════════════════════ -->
+<!-- ══ MODAL RELATÓRIO ════════════════════════════════════ -->
+<div id="modal-relatorio"
+  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-6 overflow-y-auto"
+  onclick="fecharRelatFora(event)">
+  <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-4xl my-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div>
+        <h2 class="font-semibold text-gray-900">Relatório de Contratos</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Análise visual interativa</p>
+      </div>
+      <button onclick="fecharRelatorio()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Filtros do relatório -->
+    <div class="px-6 py-3 border-b border-gray-100 flex flex-wrap gap-2 items-center bg-gray-50">
+      <span class="text-xs text-gray-500 font-medium">Filtrar relatório:</span>
+      <select id="rel-closer" onchange="renderizarRelatorio()"
+        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+        <option value="">Todos os closers</option>
+      </select>
+      <select id="rel-periodo" onchange="renderizarRelatorio()"
+        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+        <option value="">Todo o período</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="180">Últimos 6 meses</option>
+        <option value="365">Último ano</option>
+      </select>
+      <select id="rel-area" onchange="renderizarRelatorio()"
+        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+        <option value="">Todas as áreas</option>
+        <option value="PREVIDENCIÁRIO">Previdenciário</option>
+        <option value="CONSUMIDOR">Consumidor</option>
+        <option value="BANCÁRIO">Bancário</option>
+        <option value="TRABALHISTA">Trabalhista</option>
+      </select>
+      <span id="rel-total-label" class="ml-auto text-xs text-gray-400 font-medium"></span>
+    </div>
+
+    <div class="px-6 py-5 space-y-6 max-h-[75vh] overflow-y-auto">
+
+      <!-- Linha 1: KPIs do relatório -->
+      <div id="rel-kpis" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+
+      <!-- Linha 2: Status (pizza) + Área (barras) -->
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Por Status</p>
+          <div class="relative h-52"><canvas id="chart-status"></canvas></div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Por Área</p>
+          <div class="relative h-52"><canvas id="chart-area"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Linha 3: Por Closer (barras horizontais) -->
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Contratos por Closer</p>
+        <div class="relative h-56"><canvas id="chart-closer"></canvas></div>
+      </div>
+
+      <!-- Linha 4: Top benefícios -->
+      <div class="bg-gray-50 rounded-xl p-4">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Top Benefícios</p>
+        <div id="rel-beneficios" class="space-y-2"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL EQUIPE ════════════════════════════════════════ -->
 <div id="modal-equipe"
   class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
   onclick="fecharEquipeFora(event)">
@@ -495,23 +575,21 @@
         </svg>
       </button>
     </div>
-
     <div class="px-6 py-4 max-h-[50vh] overflow-y-auto">
       <div id="equipe-lista" class="space-y-2"></div>
     </div>
-
     <div class="px-6 py-4 border-t border-gray-100">
       <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Adicionar colaborador</p>
       <div class="grid grid-cols-2 gap-2 mb-2">
         <input id="equipe-novo-nome" type="text" class="input-form" placeholder="Nome"/>
         <input id="equipe-nova-senha" type="text" class="input-form" placeholder="Senha inicial"/>
       </div>
-      <div class="flex items-center gap-2 mb-1">
+      <div class="flex items-center gap-2 mb-2">
         <input type="checkbox" id="equipe-novo-admin" class="rounded"/>
-        <label for="equipe-novo-admin" class="text-xs text-gray-600">É administrador (acessa gerenciar equipe)</label>
+        <label for="equipe-novo-admin" class="text-xs text-gray-600">Administrador</label>
       </div>
       <button onclick="adicionarColaborador()"
-        class="w-full mt-2 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors">
+        class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">
         Adicionar
       </button>
     </div>
@@ -528,7 +606,6 @@ import {
   onSnapshot, serverTimestamp, query, orderBy
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-// ── FIREBASE CONFIG ────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyApfgFhFxlLyOSAtDwpPt_FUGMpYQ6qxwI",
   authDomain:        "contratos-fechados.firebaseapp.com",
@@ -543,36 +620,79 @@ const db  = getFirestore(app);
 const COL = 'contratos';
 const COL_EQUIPE = 'equipe';
 
+// ── MAPA DE BENEFÍCIOS POR ÁREA ────────────────────────
+const BENEFICIOS = {
+  'PREVIDENCIÁRIO': [
+    'SALÁRIO MATERNIDADE',
+    'BPC LOAS',
+    'AUXÍLIO DOENÇA',
+    'APOSENTADORIA POR INVALIDEZ',
+    'APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO',
+    'APOSENTADORIA ESPECIAL',
+    'APOSENTADORIA RURAL',
+    'APOSENTADORIA POR IDADE',
+    'PENSÃO POR MORTE',
+    'AUXÍLIO-ACIDENTE',
+    'AUXÍLIO RECLUSÃO',
+    'MANDADO DE SEGURANÇA',
+    'REVISÃO DE BENEFÍCIO',
+  ],
+  'CONSUMIDOR': [
+    'NEGATIVAÇÃO INDEVIDA',
+    'COBRANÇA INDEVIDA',
+    'CONTRATAÇÃO INDEVIDA DE SEGURO',
+    'DANO MORAL',
+  ],
+  'BANCÁRIO': [
+    'REVISÃO CONTRATO BANCÁRIO',
+    'REVISÃO EMPRÉSTIMO CONSIGNADO',
+    'REVISÃO FINANCIAMENTO',
+    'PORTABILIDADE',
+  ],
+  'TRABALHISTA': [
+    'REVERTER JUSTA CAUSA',
+    'RECONHECIMENTO DE VÍNCULO',
+    'VERBAS TRABALHISTAS',
+    'ACIDENTE DE TRABALHO',
+    'RESCISÃO INDIRETA',
+  ],
+};
+
+// Mapa reverso: benefício → área
+const BEN_AREA = {};
+Object.entries(BENEFICIOS).forEach(([area, lista]) => lista.forEach(b => { BEN_AREA[b] = area; }));
+
+// Legado: benefícios antigos (planilha) → normalizar área
+function resolverArea(demanda) {
+  if (!demanda) return 'PREVIDENCIÁRIO';
+  if (BEN_AREA[demanda]) return BEN_AREA[demanda];
+  // heurística para dados importados
+  if (/BPC|MATERNIDADE|AUXÍLIO|APOSENTADORIA|PENSÃO|RECLUSÃO|ACIDENTE|SEGURANÇA|BENEFÍCIO|DEMORA/i.test(demanda)) return 'PREVIDENCIÁRIO';
+  if (/NEGATIVAÇÃO|SEGURO|COBRANÇA/i.test(demanda)) return 'CONSUMIDOR';
+  if (/CONTRATO|EMPRÉSTIMO|FINANCIAMENTO|CONSIG/i.test(demanda)) return 'BANCÁRIO';
+  if (/JUSTA CAUSA|VÍNCULO|TRABALHISTA|RESCISÃO/i.test(demanda)) return 'TRABALHISTA';
+  return 'PREVIDENCIÁRIO';
+}
+
 // ── ESTADO ─────────────────────────────────────────────
 let todosContratos = [];
 let equipe         = [];
-let usuarioAtual   = null; // { id, nome, admin }
+let usuarioAtual   = null;
 let editandoId     = null;
 let detalheId      = null;
-let filtroCloser   = 'TODOS';
-let filtroDemanda  = 'TODOS';
-let filtroStatus   = 'TODOS';
+let filtroKPI      = '';
+// charts
+let chartStatus = null, chartArea = null, chartCloser = null;
 
-// ── SESSÃO LOCAL ───────────────────────────────────────
-function salvarSessao(u) {
-  sessionStorage.setItem('cg_usuario', JSON.stringify(u));
-}
-function carregarSessao() {
-  const s = sessionStorage.getItem('cg_usuario');
-  return s ? JSON.parse(s) : null;
-}
-function limparSessao() {
-  sessionStorage.removeItem('cg_usuario');
-}
+// ── SESSÃO ─────────────────────────────────────────────
+const salvarSessao  = u  => sessionStorage.setItem('cg_u', JSON.stringify(u));
+const carregarSessao= () => { try { return JSON.parse(sessionStorage.getItem('cg_u')); } catch { return null; } };
+const limparSessao  = () => sessionStorage.removeItem('cg_u');
 
-// ── LISTENER EQUIPE ────────────────────────────────────
+// ── LISTENERS ──────────────────────────────────────────
 onSnapshot(query(collection(db, COL_EQUIPE), orderBy('nome')), snap => {
   equipe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  preencherSelectEquipe();
-  renderizarEquipeLista();
-  renderizarPills();
-
-  // preencher select de login
+  // select login
   const sel = document.getElementById('login-nome');
   const cur = sel.value;
   sel.innerHTML = '<option value="">— Selecione —</option>';
@@ -580,48 +700,51 @@ onSnapshot(query(collection(db, COL_EQUIPE), orderBy('nome')), snap => {
     sel.innerHTML += `<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;
   });
   if (cur) sel.value = cur;
+  // select closer filtro e relatório
+  ['sel-closer','rel-closer'].forEach(id => {
+    const s = document.getElementById(id);
+    if (!s) return;
+    const v = s.value;
+    s.innerHTML = id === 'sel-closer'
+      ? '<option value="">Todos os closers</option>'
+      : '<option value="">Todos os closers</option>';
+    equipe.filter(e => e.ativo !== false).forEach(e => {
+      s.innerHTML += `<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;
+    });
+    if (v) s.value = v;
+  });
+  preencherSelectEquipeForm();
+  renderizarEquipeLista();
 });
 
-// ── LISTENER CONTRATOS ─────────────────────────────────
 onSnapshot(
   query(collection(db, COL), orderBy('criadoEm', 'desc')),
   snap => {
     todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     atualizarKPIs();
-    renderizarPills();
     aplicarFiltros();
     atualizarConexao(true);
   },
   err => { console.error(err); atualizarConexao(false); }
 );
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  LOGIN
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.fazerLogin = async function() {
   const nome  = document.getElementById('login-nome').value.trim();
   const senha = document.getElementById('login-senha').value.trim();
-  if (!nome)  { mostrarToast('Selecione seu nome.', 'error'); return; }
-  if (!senha) { mostrarToast('Informe sua senha.', 'error'); return; }
-
-  setLoginCarregando(true);
-  // pequeno delay para parecer profissional
-  await sleep(400);
-
-  const colaborador = equipe.find(e => e.nome === nome && e.ativo !== false);
-  if (!colaborador) {
-    mostrarToast('Usuário não encontrado ou inativo.', 'error');
-    setLoginCarregando(false); return;
-  }
-  if (colaborador.senha !== senha) {
-    mostrarToast('Senha incorreta.', 'error');
-    setLoginCarregando(false); return;
-  }
-
-  usuarioAtual = { id: colaborador.id, nome: colaborador.nome, admin: colaborador.admin === true };
+  if (!nome)  { mostrarToast('Selecione seu nome.','error'); return; }
+  if (!senha) { mostrarToast('Informe sua senha.','error'); return; }
+  setLoginLoad(true);
+  await sleep(350);
+  const col = equipe.find(e => e.nome === nome && e.ativo !== false);
+  if (!col)             { mostrarToast('Usuário não encontrado.','error'); setLoginLoad(false); return; }
+  if (col.senha !== senha) { mostrarToast('Senha incorreta.','error'); setLoginLoad(false); return; }
+  usuarioAtual = { id: col.id, nome: col.nome, admin: col.admin === true };
   salvarSessao(usuarioAtual);
   entrarNoApp();
-  setLoginCarregando(false);
+  setLoginLoad(false);
 };
 
 function entrarNoApp() {
@@ -632,154 +755,114 @@ function entrarNoApp() {
   if (usuarioAtual.admin) document.getElementById('btn-equipe').classList.remove('hidden');
 }
 
-window.sair = function() {
-  limparSessao();
-  usuarioAtual = null;
-  document.getElementById('app').classList.add('hidden');
-  document.getElementById('tela-login').classList.remove('hidden');
-  document.getElementById('login-senha').value = '';
-};
+window.sair = () => { limparSessao(); usuarioAtual=null; document.getElementById('app').classList.add('hidden'); document.getElementById('tela-login').classList.remove('hidden'); document.getElementById('login-senha').value=''; };
+window.toggleSenha = () => { const el=document.getElementById('login-senha'); el.type=el.type==='password'?'text':'password'; };
+function setLoginLoad(v) { document.getElementById('btn-login').disabled=v; document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar'; document.getElementById('btn-login-spin').classList.toggle('hidden',!v); }
 
-window.toggleSenha = function() {
-  const el = document.getElementById('login-senha');
-  el.type = el.type === 'password' ? 'text' : 'password';
-};
+window.addEventListener('load', () => { const s=carregarSessao(); if(s){ usuarioAtual=s; entrarNoApp(); } });
 
-function setLoginCarregando(v) {
-  document.getElementById('btn-login').disabled = v;
-  document.getElementById('btn-login-txt').textContent = v ? 'Entrando…' : 'Entrar';
-  document.getElementById('btn-login-spin').classList.toggle('hidden', !v);
-}
-
-// Verificar sessão salva ao carregar
-window.addEventListener('load', () => {
-  const s = carregarSessao();
-  if (s) { usuarioAtual = s; entrarNoApp(); }
-});
-
-// ════════════════════════════════════════════════════════
-//  KPIs INTERATIVOS
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  KPIs
+// ══════════════════════════════════════════════════════
 function atualizarKPIs() {
-  const total  = todosContratos.length;
-  const conc   = todosContratos.filter(c => c.status === 'CONCEDIDO').length;
-  const and    = todosContratos.filter(c => !c.status || c.status === 'EM ANDAMENTO').length;
-  const guia   = todosContratos.filter(c => c.status === 'GUIA NÃO PAGA').length;
-  document.getElementById('kpi-total').textContent    = total;
-  document.getElementById('kpi-concedidos').textContent = conc;
-  document.getElementById('kpi-andamento').textContent  = and;
-  document.getElementById('kpi-guia').textContent       = guia;
+  document.getElementById('kpi-total').textContent      = todosContratos.length;
+  document.getElementById('kpi-concedidos').textContent = todosContratos.filter(c=>c.status==='CONCEDIDO').length;
+  document.getElementById('kpi-protocolado').textContent= todosContratos.filter(c=>c.status==='PROTOCOLADO').length;
 }
 
-window.filtrarPorStatus = function(status) {
-  filtroStatus = status || 'TODOS';
-  // highlight card ativo
-  document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
-  if (status) {
-    const idx = ['','CONCEDIDO','EM ANDAMENTO','GUIA NÃO PAGA'].indexOf(status);
-    if (idx >= 0) document.querySelectorAll('.kpi-card')[idx]?.classList.add('active');
-  }
-  renderizarPills();
+window.filtrarKPI = function(status) {
+  filtroKPI = status;
+  document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
+  const idx = ['','CONCEDIDO','PROTOCOLADO'].indexOf(status);
+  if(idx>=0) document.querySelectorAll('.kpi-card')[idx]?.classList.add('ativo');
+  document.getElementById('sel-status').value = status;
   aplicarFiltros();
 };
 
-// ════════════════════════════════════════════════════════
-//  PILLS DE FILTRO
-// ════════════════════════════════════════════════════════
-function renderizarPills() {
-  // Closers
-  const ativos   = new Set(equipe.filter(e => e.ativo !== false).map(e => e.nome));
-  const nosConts = new Set(todosContratos.map(c => c.closer).filter(Boolean));
-  const todos    = [...new Set([...ativos, ...nosConts])].sort();
-
-  document.getElementById('pills-closer').innerHTML =
-    ['TODOS', ...todos].map(v => {
-      const inativo = v !== 'TODOS' && !ativos.has(v);
-      return `<button onclick="setFiltroCloser('${v}')"
-        class="text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium transition-colors
-               ${filtroCloser===v?'pill-active':'text-gray-600 hover:border-gray-300 bg-white'}
-               ${inativo?'opacity-50':''}">${v}${inativo?' ·':''}</button>`;
-    }).join('');
-
-  // Demandas (só as que existem nos contratos)
-  const demandas = [...new Set(todosContratos.map(c => c.demanda).filter(Boolean))].sort();
-  document.getElementById('pills-demanda').innerHTML =
-    ['TODOS', ...demandas].map(v => `
-      <button onclick="setFiltroDemanda('${v}')"
-        class="text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium transition-colors
-               ${filtroDemanda===v?'pill-active':'text-gray-600 hover:border-gray-300 bg-white'}"
-        title="${v}">${v==='TODOS'?'TODOS':abreviarDemanda(v)}</button>`).join('');
-
-  // Status
-  const statusOpts = ['TODOS','EM ANDAMENTO','PROTOCOLADO','CONCEDIDO','GUIA NÃO PAGA','INDEFERIDO','RECURSO'];
-  document.getElementById('pills-status').innerHTML =
-    statusOpts.map(v => `
-      <button onclick="setFiltroStatus('${v}')"
-        class="text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium transition-colors
-               ${filtroStatus===v?'pill-active':'text-gray-600 hover:border-gray-300 bg-white'}">${v}</button>`).join('');
-}
-
-window.setFiltroCloser  = v => { filtroCloser  = v; renderizarPills(); aplicarFiltros(); };
-window.setFiltroDemanda = v => { filtroDemanda = v; renderizarPills(); aplicarFiltros(); };
-window.setFiltroStatus  = v => { filtroStatus  = v; renderizarPills(); aplicarFiltros(); };
-window.limparFiltros    = () => {
-  filtroCloser='TODOS'; filtroDemanda='TODOS'; filtroStatus='TODOS';
-  document.getElementById('busca').value='';
-  document.querySelectorAll('.kpi-card').forEach(c => c.classList.remove('active'));
-  renderizarPills(); aplicarFiltros();
+// ══════════════════════════════════════════════════════
+//  FILTROS ENCADEADOS
+// ══════════════════════════════════════════════════════
+window.atualizarBeneficios = function() {
+  const cat = document.getElementById('sel-categoria').value;
+  const sel = document.getElementById('sel-beneficio');
+  sel.innerHTML = '<option value="">Todos os benefícios</option>';
+  if (cat && BENEFICIOS[cat]) {
+    BENEFICIOS[cat].forEach(b => { sel.innerHTML += `<option value="${esc(b)}">${esc(b)}</option>`; });
+  }
+  // destacar select de categoria
+  document.getElementById('sel-categoria').classList.toggle('ativo', !!cat);
+  aplicarFiltros();
 };
 
-// ════════════════════════════════════════════════════════
-//  FILTROS + TABELA
-// ════════════════════════════════════════════════════════
+window.popularBeneficiosForm = function() {
+  const cat = document.getElementById('f-categoria').value;
+  const sel = document.getElementById('f-demanda');
+  sel.innerHTML = '<option value="">— Selecione —</option>';
+  if (cat && BENEFICIOS[cat]) {
+    BENEFICIOS[cat].forEach(b => { sel.innerHTML += `<option value="${esc(b)}">${esc(b)}</option>`; });
+  }
+};
+
 window.aplicarFiltros = function() {
-  const busca  = document.getElementById('busca')?.value.toLowerCase().trim() || '';
-  const sortBy = document.getElementById('sort-select')?.value || 'fechamento_desc';
+  const busca    = document.getElementById('busca')?.value.toLowerCase().trim()||'';
+  const closer   = document.getElementById('sel-closer')?.value||'';
+  const status   = document.getElementById('sel-status')?.value||'';
+  const local    = document.getElementById('sel-local')?.value||'';
+  const cat      = document.getElementById('sel-categoria')?.value||'';
+  const beneficio= document.getElementById('sel-beneficio')?.value||'';
+  const sortBy   = document.getElementById('sort-select')?.value||'fechamento_desc';
+
+  // highlight selects ativos
+  ['sel-closer','sel-status','sel-local','sel-beneficio'].forEach(id => {
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('ativo', !!el.value);
+  });
 
   let lista = [...todosContratos];
-  if (filtroCloser  !== 'TODOS') lista = lista.filter(c => c.closer  === filtroCloser);
-  if (filtroDemanda !== 'TODOS') lista = lista.filter(c => c.demanda === filtroDemanda);
-  if (filtroStatus  !== 'TODOS') {
-    if (filtroStatus === 'EM ANDAMENTO')
-      lista = lista.filter(c => !c.status || c.status === 'EM ANDAMENTO');
-    else
-      lista = lista.filter(c => c.status === filtroStatus);
-  }
-  if (busca) lista = lista.filter(c =>
-    (c.nomeCliente ||'').toLowerCase().includes(busca) ||
-    (c.protocolo   ||'').toLowerCase().includes(busca) ||
-    (c.telefone    ||'').toLowerCase().includes(busca) ||
-    (c.observacoes ||'').toLowerCase().includes(busca)
+  if (closer)    lista = lista.filter(c => c.closer===closer);
+  if (status)    lista = lista.filter(c => (c.status||'EM ANDAMENTO')===status);
+  if (local)     lista = lista.filter(c => c.local===local);
+  if (cat)       lista = lista.filter(c => resolverArea(c.demanda)===cat);
+  if (beneficio) lista = lista.filter(c => c.demanda===beneficio);
+  if (busca)     lista = lista.filter(c =>
+    (c.nomeCliente||'').toLowerCase().includes(busca)||
+    (c.protocolo||'').toLowerCase().includes(busca)||
+    (c.telefone||'').toLowerCase().includes(busca)
   );
 
-  lista.sort((a,b) => {
-    if (sortBy==='fechamento_asc') return (a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;
-    if (sortBy==='nome_asc')       return (a.nomeCliente||'').localeCompare(b.nomeCliente||'');
+  lista.sort((a,b)=>{
+    if(sortBy==='fechamento_asc') return (a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;
+    if(sortBy==='nome_asc')       return (a.nomeCliente||'').localeCompare(b.nomeCliente||'');
     return (a.dataFechamento||'')<(b.dataFechamento||'')?1:-1;
   });
 
   renderizarTabela(lista);
-  const temFiltro = filtroCloser!=='TODOS'||filtroDemanda!=='TODOS'||filtroStatus!=='TODOS'||busca;
+  const temFiltro = busca||closer||status||local||cat||beneficio;
   document.getElementById('btn-limpar')?.classList.toggle('hidden', !temFiltro);
 };
 
-function renderizarTabela(lista) {
-  document.getElementById('total-label').textContent =
-    `${lista.length} ${lista.length===1?'contrato':'contratos'}`;
+window.limparFiltros = () => {
+  ['busca'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['sel-closer','sel-status','sel-local','sel-categoria','sel-beneficio','sort-select'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.selectedIndex=0; el.classList.remove('ativo'); }
+  });
+  document.getElementById('sel-beneficio').innerHTML='<option value="">Todos os benefícios</option>';
+  filtroKPI='';
+  document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
+  aplicarFiltros();
+};
 
+// ══════════════════════════════════════════════════════
+//  TABELA
+// ══════════════════════════════════════════════════════
+function renderizarTabela(lista) {
+  document.getElementById('total-label').textContent = `${lista.length} ${lista.length===1?'contrato':'contratos'}`;
   if (!lista.length) {
-    document.getElementById('tbody').innerHTML = `
-      <tr><td colspan="8" class="text-center py-16 text-gray-400">
-        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
-        </svg>
-        <p class="text-sm">Nenhum contrato encontrado.</p>
-      </td></tr>`;
+    document.getElementById('tbody').innerHTML=`<tr><td colspan="8" class="text-center py-16 text-gray-400"><svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/></svg><p class="text-sm">Nenhum contrato encontrado.</p></td></tr>`;
     return;
   }
-
-  document.getElementById('tbody').innerHTML = lista.map(c => `
+  document.getElementById('tbody').innerHTML = lista.map(c=>`
     <tr class="row-hover border-b border-gray-50 last:border-0 cursor-pointer" onclick="abrirDetalhe('${c.id}')">
       <td class="px-4 py-3">
         <p class="font-medium text-gray-900 text-sm truncate max-w-[200px]">${esc(c.nomeCliente)}</p>
@@ -790,48 +873,45 @@ function renderizarTabela(lista) {
         ${c.tempoFechamento!==''&&c.tempoFechamento!==undefined?`<br><span class="text-xs text-gray-400">${c.tempoFechamento}d</span>`:''}
       </td>
       <td class="px-4 py-3 hidden md:table-cell">
-        <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">
-          ${esc(abreviarDemanda(c.demanda)||'—')}
-        </span>
+        <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">${esc(abreviar(c.demanda))}</span>
       </td>
       <td class="px-4 py-3 hidden lg:table-cell text-sm text-gray-600">${esc(c.closer||'—')}</td>
-      <td class="px-4 py-3 hidden xl:table-cell text-xs text-gray-500 max-w-[160px] truncate">${esc(c.protocolo||'—')}</td>
+      <td class="px-4 py-3 hidden xl:table-cell text-xs text-gray-500 max-w-[150px] truncate">${esc(c.protocolo||'—')}</td>
       <td class="px-4 py-3">${badgeLocal(c.local)}</td>
       <td class="px-4 py-3">${badgeStatus(c.status)}</td>
       <td class="px-4 py-3">
         <button onclick="event.stopPropagation();abrirModal('${c.id}')"
           class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z"/>
           </svg>
         </button>
       </td>
     </tr>`).join('');
 }
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  MODAL CONTRATO
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.abrirModal = function(id) {
-  editandoId = id || null;
-  limparFormulario();
-  preencherSelectEquipe();
-
+  editandoId = id||null;
+  limparForm();
+  preencherSelectEquipeForm();
   if (id) {
-    const c = todosContratos.find(x => x.id===id);
-    if (!c) return;
+    const c=todosContratos.find(x=>x.id===id);
+    if(!c) return;
     document.getElementById('modal-title').textContent    = 'Editar Contrato';
     document.getElementById('modal-subtitle').textContent = c.nomeCliente;
     document.getElementById('btn-excluir').classList.remove('hidden');
-    preencherFormulario(c);
-    // auditoria
-    const aud = document.getElementById('f-auditoria');
+    // setar área primeiro para popular benefícios
+    const area = c.categoria || resolverArea(c.demanda);
+    document.getElementById('f-categoria').value = area;
+    popularBeneficiosForm();
+    preencherForm(c);
+    const aud=document.getElementById('f-auditoria');
     aud.classList.remove('hidden');
-    document.getElementById('f-criado-por').textContent =
-      `Criado por ${c.criadoPor||'—'} em ${formatarDataHora(c.criadoEm)}`;
-    document.getElementById('f-editado-por').textContent =
-      c.editadoPor ? `Última edição por ${c.editadoPor} em ${formatarDataHora(c.atualizadoEm)}` : '';
+    document.getElementById('f-criado-por').textContent=`Criado por ${c.criadoPor||'—'} em ${formatarDataHora(c.criadoEm)}`;
+    document.getElementById('f-editado-por').textContent=c.editadoPor?`Editado por ${c.editadoPor} em ${formatarDataHora(c.atualizadoEm)}`:'';
   } else {
     document.getElementById('modal-title').textContent    = 'Novo Contrato';
     document.getElementById('modal-subtitle').textContent = `Registrando como ${usuarioAtual?.nome||''}`;
@@ -846,203 +926,248 @@ window.abrirModal = function(id) {
 window.fecharModal     = () => { document.getElementById('modal-overlay').classList.add('hidden'); document.body.style.overflow=''; editandoId=null; };
 window.fecharModalFora = e  => { if(e.target===document.getElementById('modal-overlay')) fecharModal(); };
 
-function limparFormulario() {
-  ['f-nome','f-telefone','f-data-fechamento','f-data-contrato','f-tempo','f-protocolo','f-obs']
-    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['f-origem','f-closer','f-demanda','f-local','f-status']
-    .forEach(id => { const el=document.getElementById(id); if(el) el.selectedIndex=0; });
+function limparForm() {
+  ['f-nome','f-telefone','f-data-fechamento','f-data-contrato','f-tempo','f-protocolo','f-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-origem','f-closer','f-categoria','f-local'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  document.getElementById('f-status').value='EM ANDAMENTO';
+  document.getElementById('f-demanda').innerHTML='<option value="">— Selecione a área primeiro —</option>';
 }
 
-function preencherFormulario(c) {
+function preencherForm(c) {
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
-  s('f-nome',            c.nomeCliente);
-  s('f-telefone',        c.telefone);
-  s('f-data-fechamento', c.dataFechamento);
-  s('f-data-contrato',   c.dataContrato);
-  s('f-tempo',           c.tempoFechamento!==''?c.tempoFechamento+' dias':'');
-  s('f-origem',          c.origem);
-  s('f-closer',          c.closer);
-  s('f-demanda',         c.demanda);
-  s('f-local',           c.local);
-  s('f-status',          c.status);
-  s('f-protocolo',       c.protocolo);
-  s('f-obs',             c.observacoes);
+  s('f-nome',c.nomeCliente); s('f-telefone',c.telefone);
+  s('f-data-fechamento',c.dataFechamento); s('f-data-contrato',c.dataContrato);
+  s('f-tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'');
+  s('f-origem',c.origem); s('f-closer',c.closer);
+  s('f-demanda',c.demanda); s('f-local',c.local);
+  s('f-status',c.status||'EM ANDAMENTO'); s('f-protocolo',c.protocolo); s('f-obs',c.observacoes);
 }
 
-function preencherSelectEquipe() {
-  const sel   = document.getElementById('f-closer');
-  if (!sel) return;
-  const atual = sel.value;
-  const ativos   = equipe.filter(e=>e.ativo!==false);
-  const inativos = equipe.filter(e=>e.ativo===false);
-  let html = '<option value="">— Selecione —</option>';
-  ativos.forEach(e   => { html+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`; });
-  if (inativos.length) {
-    html+='<optgroup label="── Inativos ──">';
-    inativos.forEach(e => { html+=`<option value="${esc(e.nome)}">${esc(e.nome)} (inativo)</option>`; });
-    html+='</optgroup>';
-  }
+function preencherSelectEquipeForm() {
+  const sel=document.getElementById('f-closer');
+  if(!sel) return;
+  const cur=sel.value;
+  const ativos=equipe.filter(e=>e.ativo!==false);
+  const inativos=equipe.filter(e=>e.ativo===false);
+  let html='<option value="">— Selecione —</option>';
+  ativos.forEach(e=>{html+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});
+  if(inativos.length){html+='<optgroup label="── Inativos ──">';inativos.forEach(e=>{html+=`<option value="${esc(e.nome)}">${esc(e.nome)} (inativo)</option>`;});html+='</optgroup>';}
   sel.innerHTML=html;
-  if(atual) sel.value=atual;
+  if(cur)sel.value=cur;
 }
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  SALVAR / EXCLUIR
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.salvarContrato = async function() {
-  const nome        = document.getElementById('f-nome').value.trim();
-  const dtFechamento= document.getElementById('f-data-fechamento').value;
-  const closer      = document.getElementById('f-closer').value;
-  const demanda     = document.getElementById('f-demanda').value;
-
-  if (!nome)         { mostrarToast('Informe o nome.','error'); return; }
-  if (!dtFechamento) { mostrarToast('Informe a data de fechamento.','error'); return; }
-  if (!closer)       { mostrarToast('Selecione o Closer.','error'); return; }
-  if (!demanda)      { mostrarToast('Selecione o Benefício.','error'); return; }
-
-  const dtContrato = document.getElementById('f-data-contrato').value;
-  const dados = {
-    nomeCliente:    nome,
-    telefone:       document.getElementById('f-telefone').value.trim(),
-    dataFechamento: dtFechamento,
-    dataContrato:   dtContrato,
-    tempoFechamento:calcularTempoDias(dtFechamento, dtContrato),
-    origem:         document.getElementById('f-origem').value,
-    closer,
-    demanda,
-    local:          document.getElementById('f-local').value,
-    status:         document.getElementById('f-status').value || 'EM ANDAMENTO',
-    protocolo:      document.getElementById('f-protocolo').value.trim(),
-    observacoes:    document.getElementById('f-obs').value.trim(),
-    atualizadoEm:   serverTimestamp(),
-    editadoPor:     usuarioAtual?.nome || '—',
+  const nome=document.getElementById('f-nome').value.trim();
+  const dtF=document.getElementById('f-data-fechamento').value;
+  const closer=document.getElementById('f-closer').value;
+  const demanda=document.getElementById('f-demanda').value;
+  const categoria=document.getElementById('f-categoria').value;
+  if(!nome){mostrarToast('Informe o nome.','error');return;}
+  if(!dtF){mostrarToast('Informe a data de fechamento.','error');return;}
+  if(!closer){mostrarToast('Selecione o Closer.','error');return;}
+  if(!demanda){mostrarToast('Selecione o Benefício.','error');return;}
+  const dtC=document.getElementById('f-data-contrato').value;
+  const dados={
+    nomeCliente:nome,telefone:document.getElementById('f-telefone').value.trim(),
+    dataFechamento:dtF,dataContrato:dtC,
+    tempoFechamento:calcularTempoDias(dtF,dtC),
+    origem:document.getElementById('f-origem').value,
+    closer,demanda,categoria:categoria||resolverArea(demanda),
+    local:document.getElementById('f-local').value,
+    status:document.getElementById('f-status').value||'EM ANDAMENTO',
+    protocolo:document.getElementById('f-protocolo').value.trim(),
+    observacoes:document.getElementById('f-obs').value.trim(),
+    atualizadoEm:serverTimestamp(),editadoPor:usuarioAtual?.nome||'—',
   };
-
   setSalvando(true);
   try {
-    if (editandoId) {
-      await updateDoc(doc(db, COL, editandoId), dados);
-      mostrarToast('Contrato atualizado!','success');
-    } else {
-      dados.criadoEm  = serverTimestamp();
-      dados.criadoPor = usuarioAtual?.nome || '—';
-      await addDoc(collection(db, COL), dados);
-      mostrarToast('Contrato cadastrado!','success');
-    }
+    if(editandoId){await updateDoc(doc(db,COL,editandoId),dados);mostrarToast('Atualizado!','success');}
+    else{dados.criadoEm=serverTimestamp();dados.criadoPor=usuarioAtual?.nome||'—';await addDoc(collection(db,COL),dados);mostrarToast('Cadastrado!','success');}
     fecharModal();
-  } catch(err) {
-    console.error(err);
-    mostrarToast('Erro ao salvar.','error');
-  } finally { setSalvando(false); }
+  } catch(err){console.error(err);mostrarToast('Erro ao salvar.','error');}
+  finally{setSalvando(false);}
 };
 
-function setSalvando(v) {
-  document.getElementById('btn-salvar').disabled=v;
-  document.getElementById('btn-salvar-txt').textContent=v?'Salvando…':'Salvar';
-  document.getElementById('btn-salvar-spin').classList.toggle('hidden',!v);
-}
+function setSalvando(v){document.getElementById('btn-salvar').disabled=v;document.getElementById('btn-salvar-txt').textContent=v?'Salvando…':'Salvar';document.getElementById('btn-salvar-spin').classList.toggle('hidden',!v);}
 
 window.excluirContrato = async function() {
-  if (!editandoId) return;
-  const nome = document.getElementById('f-nome').value||'este contrato';
-  if (!confirm(`Excluir permanentemente "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
-  try {
-    await deleteDoc(doc(db, COL, editandoId));
-    mostrarToast('Contrato excluído.','info');
-    fecharModal();
-  } catch(err) { console.error(err); mostrarToast('Erro ao excluir.','error'); }
+  if(!editandoId) return;
+  const nome=document.getElementById('f-nome').value||'este contrato';
+  if(!confirm(`Excluir "${nome}"?`)) return;
+  try{await deleteDoc(doc(db,COL,editandoId));mostrarToast('Excluído.','info');fecharModal();}
+  catch(err){mostrarToast('Erro.','error');}
 };
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  MODAL DETALHE
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.abrirDetalhe = function(id) {
-  const c = todosContratos.find(x=>x.id===id);
-  if (!c) return;
-  detalheId = id;
-
-  const l = (label, valor) => valor
-    ? `<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">${label}</span><span class="text-gray-900 font-medium flex-1">${valor}</span></div>` : '';
-
-  document.getElementById('detalhe-body').innerHTML = `
+  const c=todosContratos.find(x=>x.id===id);
+  if(!c) return;
+  detalheId=id;
+  const l=(label,valor)=>valor?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">${label}</span><span class="text-gray-900 font-medium flex-1">${valor}</span></div>`:'';
+  document.getElementById('detalhe-body').innerHTML=`
     <div class="space-y-2.5">
-      ${l('Cliente', `<span class="text-base">${esc(c.nomeCliente)}</span>`)}
+      ${l('Cliente',`<span class="text-base">${esc(c.nomeCliente)}</span>`)}
       ${c.telefone?l('Telefone',`<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline">${esc(c.telefone)} ↗</a>`):''}
-      ${l('Fechamento',    formatarData(c.dataFechamento))}
-      ${l('Contrato ass.', formatarData(c.dataContrato))}
-      ${l('Tempo',         c.tempoFechamento!==''?c.tempoFechamento+' dias':'')}
-      ${l('Origem',        esc(c.origem))}
-      ${l('Closer',        esc(c.closer))}
-      ${l('Benefício',     esc(c.demanda))}
-      ${c.local  ?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Local</span><span>${badgeLocal(c.local)}</span></div>`:''}
-      ${c.status ?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Status</span><span>${badgeStatus(c.status)}</span></div>`:''}
-      ${l('Protocolo',     `<span class="font-mono text-xs">${esc(c.protocolo)}</span>`)}
+      ${l('Fechamento',formatarData(c.dataFechamento))}
+      ${l('Contrato ass.',formatarData(c.dataContrato))}
+      ${l('Tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'')}
+      ${l('Origem',esc(c.origem))}
+      ${l('Closer',esc(c.closer))}
+      ${l('Área',esc(c.categoria||resolverArea(c.demanda)))}
+      ${l('Benefício',esc(c.demanda))}
+      ${c.local?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Local</span><span>${badgeLocal(c.local)}</span></div>`:''}
+      ${`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Status</span><span>${badgeStatus(c.status)}</span></div>`}
+      ${l('Protocolo',`<span class="font-mono text-xs">${esc(c.protocolo)}</span>`)}
       ${c.observacoes?`<div class="pt-3 border-t border-gray-100"><p class="text-xs text-gray-400 mb-1.5 font-semibold uppercase tracking-wide">Observações</p><p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${esc(c.observacoes)}</p></div>`:''}
       <div class="pt-3 border-t border-gray-100 space-y-1">
         <p class="text-[11px] text-gray-400">Criado por <span class="font-medium text-gray-600">${esc(c.criadoPor||'—')}</span> em ${formatarDataHora(c.criadoEm)}</p>
         ${c.editadoPor?`<p class="text-[11px] text-gray-400">Editado por <span class="font-medium text-gray-600">${esc(c.editadoPor)}</span> em ${formatarDataHora(c.atualizadoEm)}</p>`:''}
       </div>
     </div>`;
-
   document.getElementById('modal-detalhe').classList.remove('hidden');
   document.body.style.overflow='hidden';
 };
 
-window.fecharDetalhe     = () => { document.getElementById('modal-detalhe').classList.add('hidden'); document.body.style.overflow=''; detalheId=null; };
-window.fecharDetalheFora = e  => { if(e.target===document.getElementById('modal-detalhe')) fecharDetalhe(); };
-window.editarDoDetalhe   = () => { const id=detalheId; fecharDetalhe(); abrirModal(id); };
+window.fecharDetalhe    = () => { document.getElementById('modal-detalhe').classList.add('hidden'); document.body.style.overflow=''; detalheId=null; };
+window.fecharDetalheFora= e  => { if(e.target===document.getElementById('modal-detalhe')) fecharDetalhe(); };
+window.editarDoDetalhe  = () => { const id=detalheId; fecharDetalhe(); abrirModal(id); };
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  RELATÓRIO
+// ══════════════════════════════════════════════════════
+window.abrirRelatorio = function() {
+  document.getElementById('modal-relatorio').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  renderizarRelatorio();
+};
+window.fecharRelatorio  = () => { document.getElementById('modal-relatorio').classList.add('hidden'); document.body.style.overflow=''; };
+window.fecharRelatFora  = e  => { if(e.target===document.getElementById('modal-relatorio')) fecharRelatorio(); };
+
+window.renderizarRelatorio = function() {
+  const closerFil = document.getElementById('rel-closer')?.value||'';
+  const periodoFil= parseInt(document.getElementById('rel-periodo')?.value||'0')||0;
+  const areaFil   = document.getElementById('rel-area')?.value||'';
+
+  let lista = [...todosContratos];
+  if (closerFil) lista = lista.filter(c=>c.closer===closerFil);
+  if (areaFil)   lista = lista.filter(c=>resolverArea(c.demanda)===areaFil);
+  if (periodoFil) {
+    const corte = new Date(); corte.setDate(corte.getDate()-periodoFil);
+    lista = lista.filter(c => {
+      if (!c.dataFechamento) return false;
+      return new Date(c.dataFechamento) >= corte;
+    });
+  }
+
+  document.getElementById('rel-total-label').textContent = `${lista.length} contratos`;
+
+  const total = lista.length || 1;
+
+  // KPIs relatório
+  const statusCount = {};
+  lista.forEach(c => { const s=c.status||'EM ANDAMENTO'; statusCount[s]=(statusCount[s]||0)+1; });
+  const kpiData = [
+    {label:'Total',valor:lista.length,cor:'text-brand-600',bg:'bg-brand-50'},
+    {label:'Concedidos',valor:statusCount['CONCEDIDO']||0,cor:'text-green-600',bg:'bg-green-50'},
+    {label:'Protocolados',valor:statusCount['PROTOCOLADO']||0,cor:'text-amber-600',bg:'bg-amber-50'},
+    {label:'Indeferidos',valor:statusCount['INDEFERIDO']||0,cor:'text-red-600',bg:'bg-red-50'},
+  ];
+  document.getElementById('rel-kpis').innerHTML = kpiData.map(k=>`
+    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
+      <p class="text-xs text-gray-400 font-medium">${k.label}</p>
+      <p class="text-xl font-bold ${k.cor} mt-0.5">${k.valor}</p>
+      <p class="text-[11px] text-gray-400">${k.valor&&lista.length?Math.round(k.valor/lista.length*100):0}%</p>
+    </div>`).join('');
+
+  // Chart Status (donut)
+  const statusLabels = ['EM ANDAMENTO','PROTOCOLADO','CONCEDIDO','INDEFERIDO'];
+  const statusColors = ['#38BDF8','#FCD34D','#4ADE80','#F87171'];
+  const statusVals   = statusLabels.map(s=>statusCount[s]||0);
+
+  if (chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('chart-status'), {
+    type:'doughnut',
+    data:{ labels:statusLabels, datasets:[{ data:statusVals, backgroundColor:statusColors, borderWidth:2, borderColor:'#F9FAFB' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:10 } } } }
+  });
+
+  // Chart Área (barras)
+  const areaCount = {};
+  lista.forEach(c=>{ const a=resolverArea(c.demanda); areaCount[a]=(areaCount[a]||0)+1; });
+  const areaLabels = Object.keys(areaCount).sort();
+  const areaColors = ['#818CF8','#34D399','#FB923C','#F472B6'];
+
+  if (chartArea) chartArea.destroy();
+  chartArea = new Chart(document.getElementById('chart-area'), {
+    type:'bar',
+    data:{ labels:areaLabels, datasets:[{ data:areaLabels.map(a=>areaCount[a]), backgroundColor:areaColors, borderRadius:6, borderWidth:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{font:{size:10}}, grid:{color:'#F1F5F9'} }, x:{ ticks:{font:{size:10}}, grid:{display:false} } } }
+  });
+
+  // Chart Closer (barras horizontais)
+  const closerCount = {};
+  lista.forEach(c=>{ if(c.closer) closerCount[c.closer]=(closerCount[c.closer]||0)+1; });
+  const closerLabels = Object.keys(closerCount).sort((a,b)=>closerCount[b]-closerCount[a]);
+  const closerVals   = closerLabels.map(cl=>closerCount[cl]);
+
+  if (chartCloser) chartCloser.destroy();
+  chartCloser = new Chart(document.getElementById('chart-closer'), {
+    type:'bar',
+    data:{ labels:closerLabels, datasets:[{ data:closerVals, backgroundColor:'#818CF8', borderRadius:4, borderWidth:0 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true, ticks:{font:{size:10}}, grid:{color:'#F1F5F9'} }, y:{ ticks:{font:{size:10}}, grid:{display:false} } } }
+  });
+
+  // Top benefícios (barras de progresso)
+  const benCount = {};
+  lista.forEach(c=>{ if(c.demanda) benCount[c.demanda]=(benCount[c.demanda]||0)+1; });
+  const benTop = Object.entries(benCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const benMax = benTop[0]?.[1]||1;
+  document.getElementById('rel-beneficios').innerHTML = benTop.map(([nome,qtd])=>`
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-gray-600 w-44 flex-shrink-0 truncate" title="${esc(nome)}">${esc(abreviar(nome))}</span>
+      <div class="flex-1 bg-gray-200 rounded-full h-2">
+        <div class="bg-brand-500 h-2 rounded-full transition-all" style="width:${Math.round(qtd/benMax*100)}%"></div>
+      </div>
+      <span class="text-xs font-semibold text-gray-700 w-8 text-right">${qtd}</span>
+      <span class="text-xs text-gray-400 w-8 text-right">${Math.round(qtd/total*100)}%</span>
+    </div>`).join('');
+};
+
+// ══════════════════════════════════════════════════════
 //  MODAL EQUIPE
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.abrirEquipe     = () => { document.getElementById('modal-equipe').classList.remove('hidden'); document.body.style.overflow='hidden'; };
 window.fecharEquipe    = () => { document.getElementById('modal-equipe').classList.add('hidden'); document.body.style.overflow=''; };
 window.fecharEquipeFora= e  => { if(e.target===document.getElementById('modal-equipe')) fecharEquipe(); };
 
 function renderizarEquipeLista() {
-  const lista = document.getElementById('equipe-lista');
-  if (!lista) return;
-  if (!equipe.length) { lista.innerHTML='<p class="text-sm text-gray-400 text-center py-4">Nenhum colaborador.</p>'; return; }
-
-  lista.innerHTML = equipe.map(e => {
-    const ativo = e.ativo !== false;
-    return `
-    <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-gray-100 ${ativo?'bg-white':'bg-gray-50 opacity-60'}">
+  const lista=document.getElementById('equipe-lista');
+  if(!lista) return;
+  if(!equipe.length){lista.innerHTML='<p class="text-sm text-gray-400 text-center py-4">Nenhum colaborador.</p>';return;}
+  lista.innerHTML=equipe.map(e=>{
+    const ativo=e.ativo!==false;
+    return `<div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-gray-100 ${ativo?'bg-white':'bg-gray-50 opacity-60'}">
       <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0
-                    ${ativo?'bg-brand-100 text-brand-700':'bg-gray-200 text-gray-500'}">
-          ${esc(e.nome.charAt(0).toUpperCase())}
-        </div>
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${ativo?'bg-brand-100 text-brand-700':'bg-gray-200 text-gray-500'}">${esc(e.nome.charAt(0).toUpperCase())}</div>
         <div class="min-w-0">
           <p class="text-sm font-medium text-gray-800 truncate">${esc(e.nome)}</p>
-          <p class="text-[11px] ${ativo?'text-green-600':'text-gray-400'}">
-            ${ativo?'Ativo':'Inativo'} ${e.admin?'· Admin':''}
-          </p>
+          <p class="text-[11px] ${ativo?'text-green-600':'text-gray-400'}">${ativo?'Ativo':'Inativo'}${e.admin?' · Admin':''}</p>
         </div>
       </div>
       <div class="flex items-center gap-1 flex-shrink-0">
-        <!-- Editar senha -->
-        <button onclick="editarSenha('${e.id}','${esc(e.nome)}')" title="Alterar senha"
-          class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-          </svg>
+        <button onclick="editarSenha('${e.id}','${esc(e.nome)}')" title="Alterar senha" class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
         </button>
-        <!-- Toggle ativo -->
-        <button onclick="toggleAtivo('${e.id}',${!ativo})" title="${ativo?'Desativar':'Reativar'}"
-          class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
-          ${ativo
-            ?`<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
-            :`<svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`}
+        <button onclick="toggleAtivo('${e.id}',${!ativo})" title="${ativo?'Desativar':'Reativar'}" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
+          ${ativo?`<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`:`<svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`}
         </button>
-        <!-- Excluir -->
-        <button onclick="excluirColaborador('${e.id}','${esc(e.nome)}')" title="Excluir"
-          class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
+        <button onclick="excluirColaborador('${e.id}','${esc(e.nome)}')" title="Excluir" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
         </button>
       </div>
     </div>`;
@@ -1050,138 +1175,101 @@ function renderizarEquipeLista() {
 }
 
 window.adicionarColaborador = async function() {
-  const nome  = document.getElementById('equipe-novo-nome').value.trim();
-  const senha = document.getElementById('equipe-nova-senha').value.trim();
-  const admin = document.getElementById('equipe-novo-admin').checked;
-  if (!nome)  { mostrarToast('Informe o nome.','error'); return; }
-  if (!senha) { mostrarToast('Defina uma senha.','error'); return; }
-  if (equipe.some(e=>e.nome.toLowerCase()===nome.toLowerCase())) {
-    mostrarToast('Já existe um colaborador com este nome.','error'); return;
-  }
-  try {
-    await addDoc(collection(db, COL_EQUIPE), { nome, senha, admin, ativo:true, criadoEm:serverTimestamp() });
+  const nome=document.getElementById('equipe-novo-nome').value.trim();
+  const senha=document.getElementById('equipe-nova-senha').value.trim();
+  const admin=document.getElementById('equipe-novo-admin').checked;
+  if(!nome){mostrarToast('Informe o nome.','error');return;}
+  if(!senha){mostrarToast('Defina uma senha.','error');return;}
+  if(equipe.some(e=>e.nome.toLowerCase()===nome.toLowerCase())){mostrarToast('Nome já existe.','error');return;}
+  try{
+    await addDoc(collection(db,COL_EQUIPE),{nome,senha,admin,ativo:true,criadoEm:serverTimestamp()});
     document.getElementById('equipe-novo-nome').value='';
     document.getElementById('equipe-nova-senha').value='';
     document.getElementById('equipe-novo-admin').checked=false;
     mostrarToast(`${nome} adicionado(a)!`,'success');
-  } catch(err) { console.error(err); mostrarToast('Erro ao adicionar.','error'); }
+  }catch(err){mostrarToast('Erro.','error');}
 };
 
-window.editarSenha = async function(id, nome) {
-  const nova = prompt(`Nova senha para ${nome}:`);
-  if (!nova || !nova.trim()) return;
-  try {
-    await updateDoc(doc(db, COL_EQUIPE, id), { senha: nova.trim() });
-    mostrarToast(`Senha de ${nome} atualizada.`,'success');
-  } catch(err) { mostrarToast('Erro ao atualizar senha.','error'); }
+window.editarSenha = async function(id,nome) {
+  const nova=prompt(`Nova senha para ${nome}:`);
+  if(!nova||!nova.trim()) return;
+  try{await updateDoc(doc(db,COL_EQUIPE,id),{senha:nova.trim()});mostrarToast('Senha atualizada.','success');}
+  catch{mostrarToast('Erro.','error');}
 };
 
-window.toggleAtivo = async function(id, novoStatus) {
-  try {
-    await updateDoc(doc(db, COL_EQUIPE, id), { ativo: novoStatus });
-    mostrarToast(novoStatus?'Colaborador reativado.':'Colaborador desativado.','info');
-  } catch(err) { mostrarToast('Erro.','error'); }
+window.toggleAtivo = async function(id,v) {
+  try{await updateDoc(doc(db,COL_EQUIPE,id),{ativo:v});mostrarToast(v?'Reativado.':'Desativado.','info');}
+  catch{mostrarToast('Erro.','error');}
 };
 
-window.excluirColaborador = async function(id, nome) {
-  if (!confirm(`Excluir "${nome}"?\nContratos existentes mantêm o nome registrado.`)) return;
-  try {
-    await deleteDoc(doc(db, COL_EQUIPE, id));
-    mostrarToast(`${nome} removido(a).`,'info');
-  } catch(err) { mostrarToast('Erro ao excluir.','error'); }
+window.excluirColaborador = async function(id,nome) {
+  if(!confirm(`Excluir "${nome}"?`)) return;
+  try{await deleteDoc(doc(db,COL_EQUIPE,id));mostrarToast(`${nome} removido(a).`,'info');}
+  catch{mostrarToast('Erro.','error');}
 };
 
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  UTILITÁRIOS
-// ════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 window.calcularTempo = function() {
   const d1=document.getElementById('f-data-fechamento').value;
   const d2=document.getElementById('f-data-contrato').value;
   const r=calcularTempoDias(d1,d2);
-  document.getElementById('f-tempo').value = r!==''?r+' dias':'';
+  document.getElementById('f-tempo').value=r!==''?r+' dias':'';
 };
+function calcularTempoDias(d1,d2){if(!d1||!d2)return'';const diff=Math.round((new Date(d2)-new Date(d1))/86400000);return isNaN(diff)?'':diff;}
+window.mascaraTel=function(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>=11)v=v.replace(/^(\d{2})(\d{1})(\d{4})(\d{4})$/,'($1) $2 $3-$4');else if(v.length>6)v=v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/,'($1) $2-$3');else if(v.length>2)v=v.replace(/^(\d{2})(\d{0,5})$/,'($1) $2');el.value=v;};
+function formatarData(str){if(!str)return'—';const[y,m,d]=str.split('-');return(!y||!m||!d)?str:`${d}/${m}/${y}`;}
+function formatarDataHora(ts){if(!ts)return'—';try{const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch{return'—';}}
+function hoje(){return new Date().toISOString().split('T')[0];}
+function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-function calcularTempoDias(d1,d2) {
-  if(!d1||!d2) return '';
-  const diff=Math.round((new Date(d2)-new Date(d1))/86400000);
-  return isNaN(diff)?'':diff;
-}
-
-window.mascaraTel = function(el) {
-  let v=el.value.replace(/\D/g,'').slice(0,11);
-  if(v.length>=11)     v=v.replace(/^(\d{2})(\d{1})(\d{4})(\d{4})$/,'($1) $2 $3-$4');
-  else if(v.length>6)  v=v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/,'($1) $2-$3');
-  else if(v.length>2)  v=v.replace(/^(\d{2})(\d{0,5})$/,'($1) $2');
-  el.value=v;
-};
-
-function formatarData(str) {
-  if(!str) return '—';
-  const[y,m,d]=str.split('-');
-  return(!y||!m||!d)?str:`${d}/${m}/${y}`;
-}
-
-function formatarDataHora(ts) {
-  if(!ts) return '—';
-  try {
-    const d = ts.toDate ? ts.toDate() : new Date(ts);
-    return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  } catch { return '—'; }
-}
-
-function hoje() { return new Date().toISOString().split('T')[0]; }
-
-function esc(str) {
-  return String(str||'')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function abreviarDemanda(v) {
+function abreviar(v){
   if(!v) return '—';
   const m={
-    'SALÁRIO MATERNIDADE':                    'SAL. MATERNIDADE',
-    'BPC LOAS':                               'BPC LOAS',
-    'AUXÍLIO DOENÇA':                         'AUX. DOENÇA',
-    'APOSENTADORIA POR INVALIDEZ':            'APOS. INVALIDEZ',
+    'SALÁRIO MATERNIDADE':'SAL. MATERNIDADE',
+    'BPC LOAS':'BPC LOAS',
+    'AUXÍLIO DOENÇA':'AUX. DOENÇA',
+    'APOSENTADORIA POR INVALIDEZ':'APOS. INVALIDEZ',
     'APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO':'APOS. TEMPO',
-    'APOSENTADORIA ESPECIAL':                 'APOS. ESPECIAL',
-    'PENSÃO POR MORTE':                       'PENSÃO MORTE',
-    'AUXÍLIO-ACIDENTE':                       'AUX. ACIDENTE',
-    'AUXÍLIO RECLUSÃO':                       'AUX. RECLUSÃO',
-    'MANDADO DE SEGURANÇA':                   'MS',
-    'REVISÃO DE BENEFÍCIO':                   'REV. BENEFÍCIO',
-    'REVISÃO CONTRATO BANCÁRIO':              'REV. CONTRATO',
-    'NEGATIVAÇÃO INDEVIDA':                   'NEG. INDEVIDA',
-    'ACIDENTE DE TRABALHO':                   'ACID. TRABALHO',
+    'APOSENTADORIA ESPECIAL':'APOS. ESPECIAL',
+    'APOSENTADORIA RURAL':'APOS. RURAL',
+    'APOSENTADORIA POR IDADE':'APOS. IDADE',
+    'PENSÃO POR MORTE':'PENSÃO MORTE',
+    'AUXÍLIO-ACIDENTE':'AUX. ACIDENTE',
+    'AUXÍLIO RECLUSÃO':'AUX. RECLUSÃO',
+    'MANDADO DE SEGURANÇA':'MS',
+    'REVISÃO DE BENEFÍCIO':'REV. BENEFÍCIO',
+    'REVISÃO CONTRATO BANCÁRIO':'REV. CONTRATO',
+    'REVISÃO EMPRÉSTIMO CONSIGNADO':'REV. CONSIG.',
+    'NEGATIVAÇÃO INDEVIDA':'NEG. INDEVIDA',
+    'CONTRATAÇÃO INDEVIDA DE SEGURO':'SEG. INDEVIDO',
+    'REVERTER JUSTA CAUSA':'JUSTA CAUSA',
+    'ACIDENTE DE TRABALHO':'ACID. TRABALHO',
   };
   return m[v]||v;
 }
 
-function badgeLocal(v) {
-  if(!v) return '<span class="text-xs text-gray-400">—</span>';
+function badgeLocal(v){
+  if(!v)return'<span class="text-xs text-gray-400">—</span>';
   const cfg={'INSS':'bg-blue-50 text-blue-700 border-blue-200','JUSTIÇA':'bg-violet-50 text-violet-700 border-violet-200'};
-  const cls=cfg[v]||'bg-gray-100 text-gray-600 border-gray-200';
-  return `<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cls}">${esc(v)}</span>`;
+  return`<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cfg[v]||'bg-gray-100 text-gray-600 border-gray-200'}">${esc(v)}</span>`;
 }
 
-function badgeStatus(v) {
-  if(!v||v==='EM ANDAMENTO') return `<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border bg-sky-50 text-sky-700 border-sky-200"><span class="w-1.5 h-1.5 rounded-full bg-sky-500 dot-pulse flex-shrink-0"></span>EM ANDAMENTO</span>`;
+function badgeStatus(v){
+  const s=v||'EM ANDAMENTO';
   const cfg={
-    'CONCEDIDO':           'bg-green-50 text-green-700 border-green-200',
-    'PROTOCOLADO':         'bg-amber-50 text-amber-700 border-amber-200',
-    'GUIA NÃO PAGA':       'bg-red-50 text-red-700 border-red-200',
-    'INDEFERIDO':          'bg-gray-100 text-gray-600 border-gray-200',
-    'RECURSO':             'bg-orange-50 text-orange-700 border-orange-200',
-    'AGUARDANDO DOCUMENTO':'bg-purple-50 text-purple-700 border-purple-200',
-    'CANCELADO':           'bg-gray-100 text-gray-500 border-gray-200',
-    'NÃO SE APLICA':       'bg-gray-100 text-gray-500 border-gray-200',
+    'EM ANDAMENTO': {cls:'bg-sky-50 text-sky-700 border-sky-200',   dot:'bg-sky-500',  pulse:true},
+    'PROTOCOLADO':  {cls:'bg-amber-50 text-amber-700 border-amber-200', dot:'bg-amber-400'},
+    'CONCEDIDO':    {cls:'bg-green-50 text-green-700 border-green-200', dot:'bg-green-500'},
+    'INDEFERIDO':   {cls:'bg-red-50 text-red-700 border-red-200',       dot:'bg-red-400'},
   };
-  const cls=cfg[v]||'bg-gray-100 text-gray-600 border-gray-200';
-  return `<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cls}"><span class="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0"></span>${esc(v)}</span>`;
+  const c=cfg[s]||{cls:'bg-gray-100 text-gray-600 border-gray-200',dot:'bg-gray-400'};
+  return`<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${c.cls}"><span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}${c.pulse?' dot-pulse':''}"></span>${esc(s)}</span>`;
 }
 
-function mostrarToast(msg,tipo='info') {
+function mostrarToast(msg,tipo='info'){
   const bg={success:'bg-green-600',error:'bg-red-600',info:'bg-gray-700'}[tipo]||'bg-gray-700';
   const el=document.createElement('div');
   el.className=`toast-in pointer-events-auto ${bg} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg max-w-xs`;
@@ -1190,7 +1278,7 @@ function mostrarToast(msg,tipo='info') {
   setTimeout(()=>{el.classList.replace('toast-in','toast-out');setTimeout(()=>el.remove(),350);},3500);
 }
 
-function atualizarConexao(ok) {
+function atualizarConexao(ok){
   const badge=document.getElementById('conn-badge');
   const dot=document.getElementById('conn-dot');
   badge.classList.remove('hidden');badge.classList.add('flex');
@@ -1198,9 +1286,6 @@ function atualizarConexao(ok) {
   dot.className='w-1.5 h-1.5 rounded-full '+(ok?'bg-green-500':'bg-red-500');
   document.getElementById('conn-text').textContent=ok?'Ao vivo':'Offline';
 }
-
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
 </script>
 </body>
 </html>
