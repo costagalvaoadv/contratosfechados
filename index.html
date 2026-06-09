@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contratos Fechados · Costa Galvão Advocacia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#EEF2FF', 100:'#E0E7FF', 500:'#6366F1', 600:'#4F46E5', 700:'#4338CA' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Inter',sans-serif}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:99px}
+    @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.35)}}
+    .dot-pulse{animation:pulse-dot 1.8s ease-in-out infinite}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .modal-content{animation:fadeInUp .22s ease}
+    @keyframes slideInRight{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOutRight{from{transform:translateX(0);opacity:1}to{transform:translateX(110%);opacity:0}}
+    .toast-in{animation:slideInRight .3s ease forwards}
+    .toast-out{animation:slideOutRight .3s ease forwards}
+    input,select,textarea{outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus,textarea:focus{border-color:#6366F1!important;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+    .pill-active{background:#4F46E5;color:#fff;border-color:#4F46E5!important}
+    .row-hover:hover{background:#F8FAFC}
+    .alert-card{border-left:3px solid #EC4899}
+    .table-wrap{overflow-x:auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{animation:spin .8s linear infinite}
+    .label-form{display:block;font-size:.75rem;font-weight:500;color:#6B7280;margin-bottom:.25rem}
+    .input-form{width:100%;padding:.5rem .75rem;font-size:.875rem;border:1px solid #E5E7EB;border-radius:.5rem;background:#fff;color:#111827;line-height:1.5}
+    .input-form::placeholder{color:#9CA3AF}
+    select.input-form{appearance:auto}
+    /* tag inativo no select */
+    option.inativo{color:#9CA3AF}
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+<!-- ══ TOAST ══════════════════════════════════════════════ -->
+<div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+
+<!-- ══ HEADER ═════════════════════════════════════════════ -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div>
+        <span class="font-semibold text-sm text-gray-900 leading-none">Costa Galvão</span>
+        <span class="block text-[10px] text-gray-400 leading-none mt-0.5 uppercase tracking-wide">Contratos Fechados</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Indicador de conexão -->
+      <div id="conn-badge" class="hidden items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-full">
+        <span id="conn-dot" class="w-1.5 h-1.5 rounded-full"></span>
+        <span id="conn-text"></span>
+      </div>
+
+      <!-- Botão Gerenciar Equipe -->
+      <button onclick="abrirEquipe()" title="Gerenciar Equipe"
+        class="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 100-6 3 3 0 000 6zM3 14a3 3 0 100-6 3 3 0 000 6z"/>
+        </svg>
+      </button>
+
+      <!-- Botão Novo Contrato -->
+      <button onclick="abrirModal()"
+        class="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span class="hidden sm:inline">Novo Contrato</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ═══════════════════════════════════════════════ -->
+<main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+  <!-- KPIs -->
+  <section id="kpi-section" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></section>
+
+  <!-- Alertas Maternidade -->
+  <section id="alerta-section" class="hidden">
+    <div class="flex items-center gap-2 mb-3">
+      <svg class="w-4 h-4 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <h2 class="text-sm font-semibold text-gray-700">Previsões de Nascimento — próximos 30 dias</h2>
+    </div>
+    <div id="alerta-cards" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+  </section>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+    <div class="relative">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z"/>
+      </svg>
+      <input id="busca" type="text"
+        placeholder="Buscar por nome, protocolo, telefone ou observações…"
+        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50"
+        oninput="aplicarFiltros()" />
+    </div>
+
+    <div class="flex flex-wrap gap-x-4 gap-y-2 items-start">
+      <div class="flex items-center gap-1 flex-wrap">
+        <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide mr-1">Closer</span>
+        <div id="pills-closer" class="flex flex-wrap gap-1"></div>
+      </div>
+      <div class="w-px h-5 bg-gray-200 hidden sm:block mx-1 mt-1"></div>
+      <div class="flex items-center gap-1 flex-wrap">
+        <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide mr-1">Demanda</span>
+        <div id="pills-demanda" class="flex flex-wrap gap-1"></div>
+      </div>
+      <button id="btn-limpar" onclick="limparFiltros()"
+        class="ml-auto text-[11px] text-brand-600 hover:underline hidden mt-1">
+        Limpar filtros
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <span id="total-label" class="text-sm text-gray-500">—</span>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] text-gray-400 uppercase tracking-wide font-medium hidden sm:inline">Ordenar</span>
+        <select id="sort-select" onchange="aplicarFiltros()"
+          class="text-xs border border-gray-200 rounded-md py-1 px-2 bg-gray-50 text-gray-600">
+          <option value="fechamento_desc">Fechamento ↓</option>
+          <option value="fechamento_asc">Fechamento ↑</option>
+          <option value="nome_asc">Nome A–Z</option>
+          <option value="previsao_asc">Previsão Nasc. ↑</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-100 text-[11px] text-gray-400 uppercase tracking-wide">
+            <th class="text-left px-4 py-2.5 font-medium">Cliente</th>
+            <th class="text-left px-4 py-2.5 font-medium">Fechamento</th>
+            <th class="text-left px-4 py-2.5 font-medium hidden md:table-cell">Demanda</th>
+            <th class="text-left px-4 py-2.5 font-medium hidden lg:table-cell">Closer</th>
+            <th class="text-left px-4 py-2.5 font-medium hidden xl:table-cell">Protocolo</th>
+            <th class="text-left px-4 py-2.5 font-medium">Local</th>
+            <th class="text-left px-4 py-2.5 font-medium">Status</th>
+            <th class="px-4 py-2.5"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr>
+            <td colspan="8" class="text-center py-16">
+              <div class="flex flex-col items-center gap-3 text-gray-400">
+                <svg class="w-8 h-8 spinner text-brand-500" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                </svg>
+                <span class="text-sm">Conectando ao banco de dados…</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ══ MODAL: FORMULÁRIO DE CONTRATO ══════════════════════ -->
+<div id="modal-overlay"
+  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+  onclick="fecharModalFora(event)">
+  <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-2xl my-auto">
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div>
+        <h2 id="modal-title" class="font-semibold text-gray-900">Novo Contrato</h2>
+        <p id="modal-subtitle" class="text-xs text-gray-400 mt-0.5">Preencha os dados abaixo</p>
+      </div>
+      <button onclick="fecharModal()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+
+      <!-- Identificação -->
+      <fieldset>
+        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Identificação</legend>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div class="sm:col-span-2">
+            <label class="label-form">Nome Completo do Cliente *</label>
+            <input id="f-nome" type="text" required class="input-form" placeholder="Maria da Silva Santos"/>
+          </div>
+          <div>
+            <label class="label-form">Telefone</label>
+            <input id="f-telefone" type="tel" class="input-form" placeholder="(87) 9 9999-9999"
+              oninput="mascaraTel(this)" maxlength="17"/>
+          </div>
+          <div>
+            <label class="label-form">Origem do Lead</label>
+            <select id="f-origem" class="input-form">
+              <option value="">— Selecione —</option>
+              <option>Tráfego Facebook</option>
+              <option>Instagram Orgânico</option>
+              <option>Indicação Cliente</option>
+              <option>Indicação Jucely</option>
+              <option>Indicação Joelma</option>
+              <option>Indicação Isabel</option>
+              <option>Google Ads</option>
+              <option>WhatsApp Orgânico</option>
+              <option>Site / Blog</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Datas -->
+      <fieldset>
+        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Datas</legend>
+        <div class="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label class="label-form">Data do Fechamento *</label>
+            <input id="f-data-fechamento" type="date" required class="input-form" onchange="calcularTempo()"/>
+          </div>
+          <div>
+            <label class="label-form">Contrato Assinado</label>
+            <input id="f-data-contrato" type="date" class="input-form" onchange="calcularTempo()"/>
+          </div>
+          <div>
+            <label class="label-form">Tempo <span class="text-[10px] text-gray-400 font-normal">(auto)</span></label>
+            <input id="f-tempo" type="text" readonly class="input-form bg-gray-50 text-gray-500 cursor-default" placeholder="— dias"/>
+          </div>
+          <div>
+            <label class="label-form flex items-center gap-1.5">
+              Previsão de Nascimento
+              <span class="text-[10px] bg-pink-50 text-pink-600 px-1.5 py-0.5 rounded font-medium">Maternidade</span>
+            </label>
+            <input id="f-previsao" type="date" class="input-form"/>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Processo -->
+      <fieldset>
+        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Processo</legend>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="label-form">Closer / Responsável *</label>
+            <select id="f-closer" required class="input-form">
+              <option value="">— Selecione —</option>
+              <!-- preenchido dinamicamente via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="label-form">Demanda / Causa *</label>
+            <select id="f-demanda" required class="input-form">
+              <option value="">— Selecione —</option>
+              <option>SALÁRIO MATERNIDADE</option>
+              <option>ENTRADA BPC</option>
+              <option>ENTRADA BPC - COLUNA</option>
+              <option>ENTRADA BPC - ANEMIA FALCIFORME</option>
+              <option>ENTRADA BPC - AUTISMO</option>
+              <option>ENTRADA BPC - BIPOLARIDADE</option>
+              <option>BPC LOAS</option>
+              <option>BPC LOAS PARA O FILHO</option>
+              <option>AUXÍLIO DOENÇA</option>
+              <option>AUXÍLIO-ACIDENTE</option>
+              <option>APOSENTADORIA POR INVALIDEZ</option>
+              <option>APOSENTADORIA POR TEMPO</option>
+              <option>APOSENTADORIA ESPECIAL</option>
+              <option>PENSÃO POR MORTE</option>
+              <option>MANDADO DE SEGURANÇA</option>
+              <option>DEMORA NA ANÁLISE</option>
+              <option>REVISÃO DE BENEFÍCIO</option>
+              <option>REVISÃO CONTRATO EMPRÉSTIMO CONSIGNADO</option>
+              <option>NEGATIVAÇÃO INDEVIDA</option>
+              <option>CONTRATAÇÃO INDEVIDA DE SEGURO</option>
+              <option>ACIDENTE DE TRABALHO</option>
+              <option>REVERTER JUSTA CAUSA</option>
+              <option>RECURSO ADMINISTRATIVO</option>
+              <option>PASEP</option>
+              <option>OUTRO</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-form">Local</label>
+            <select id="f-local" class="input-form">
+              <option value="">— Selecione —</option>
+              <option>INSS</option>
+              <option>JUSTIÇA</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-form">Status Final</label>
+            <select id="f-status" class="input-form">
+              <option value="">— Selecione —</option>
+              <option>EM ANDAMENTO</option>
+              <option>PROTOCOLADO</option>
+              <option>CONCEDIDO</option>
+              <option>GUIA NÃO PAGA</option>
+              <option>INDEFERIDO</option>
+              <option>RECURSO</option>
+              <option>CANCELADO</option>
+              <option>AGUARDANDO DOCUMENTO</option>
+              <option>NÃO SE APLICA</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="label-form">Protocolo / Nº do Processo</label>
+            <input id="f-protocolo" type="text" class="input-form"
+              placeholder="Ex.: 0000127-07.2017.8.17.3230"/>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Observações -->
+      <fieldset>
+        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Observações</legend>
+        <textarea id="f-obs" rows="4" class="input-form resize-y"
+          placeholder="Histórico, anotações importantes, andamento atual…"></textarea>
+      </fieldset>
+
+    </div><!-- /corpo -->
+
+    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
+      <button id="btn-excluir" onclick="excluirContrato()"
+        class="hidden text-sm text-red-500 hover:text-red-700 font-medium transition-colors">
+        Excluir contrato
+      </button>
+      <div class="flex items-center gap-2 ml-auto">
+        <button onclick="fecharModal()"
+          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancelar</button>
+        <button id="btn-salvar" onclick="salvarContrato()"
+          class="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors">
+          <span id="btn-salvar-txt">Salvar</span>
+          <svg id="btn-salvar-spin" class="hidden w-4 h-4 spinner" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: DETALHE DO CONTRATO ═════════════════════════ -->
+<div id="modal-detalhe"
+  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+  onclick="fecharDetalheFora(event)">
+  <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-lg my-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h2 class="font-semibold text-gray-900">Detalhes do Contrato</h2>
+      <button onclick="fecharDetalhe()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div id="detalhe-body" class="px-6 py-5 space-y-2.5 max-h-[70vh] overflow-y-auto text-sm"></div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+      <button onclick="fecharDetalhe()"
+        class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Fechar</button>
+      <button onclick="editarDoDetalhe()"
+        class="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors">
+        Editar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: GERENCIAR EQUIPE ════════════════════════════ -->
+<div id="modal-equipe"
+  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+  onclick="fecharEquipeFora(event)">
+  <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md my-auto">
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div>
+        <h2 class="font-semibold text-gray-900">Gerenciar Equipe</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Closers disponíveis no sistema</p>
+      </div>
+      <button onclick="fecharEquipe()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Lista de colaboradores -->
+    <div class="px-6 py-4 max-h-[50vh] overflow-y-auto">
+      <div id="equipe-lista" class="space-y-2">
+        <div class="flex items-center justify-center py-8">
+          <svg class="w-6 h-6 spinner text-brand-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adicionar novo -->
+    <div class="px-6 py-4 border-t border-gray-100">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Adicionar colaborador</p>
+      <div class="flex gap-2">
+        <input id="equipe-novo-nome" type="text" class="input-form flex-1" placeholder="Nome completo"
+          onkeydown="if(event.key==='Enter') adicionarColaborador()"/>
+        <button onclick="adicionarColaborador()"
+          class="flex-shrink-0 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors">
+          Adicionar
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ FIREBASE + LÓGICA ══════════════════════════════════ -->
+<script type="module">
+// ─────────────────────────────────────────────────────────
+//  ① CONFIGURAÇÃO DO FIREBASE
+//  → Substitua pelos valores do seu Firebase Console:
+//    Console → Project Settings → General → Your apps
+// ─────────────────────────────────────────────────────────
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, collection, doc,
+  addDoc, updateDoc, deleteDoc,
+  onSnapshot, serverTimestamp,
+  query, orderBy
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJECT_ID.firebaseapp.com",
+  projectId:         "SEU_PROJECT_ID",
+  storageBucket:     "SEU_PROJECT_ID.appspot.com",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId:             "SEU_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// Nomes das coleções
+const COL_CONTRATOS = 'contratos';
+const COL_EQUIPE    = 'equipe';
+
+// ─────────────────────────────────────────────────────────
+//  ② ESTADO LOCAL
+// ─────────────────────────────────────────────────────────
+let todosContratos = [];
+let equipe         = [];   // [{ id, nome, ativo }]
+let editandoId     = null;
+let detalheId      = null;
+let filtroCloser   = 'TODOS';
+let filtroDemanda  = 'TODOS';
+
+// ─────────────────────────────────────────────────────────
+//  ③ LISTENERS REALTIME
+// ─────────────────────────────────────────────────────────
+
+// — Contratos —
+onSnapshot(
+  query(collection(db, COL_CONTRATOS), orderBy('criadoEm', 'desc')),
+  snap => {
+    todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderizarTudo();
+    atualizarConexao(true);
+  },
+  err => {
+    console.error(err);
+    atualizarConexao(false);
+    mostrarToast('Erro ao conectar ao banco de dados.', 'error');
+  }
+);
+
+// — Equipe —
+onSnapshot(
+  query(collection(db, COL_EQUIPE), orderBy('nome')),
+  snap => {
+    equipe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderizarSelectCloser();
+    renderizarEquipeLista();
+    renderizarPills(); // atualiza pills se modal de equipe mudar algo
+  }
+);
+
+// ─────────────────────────────────────────────────────────
+//  ④ RENDERIZAÇÃO GERAL
+// ─────────────────────────────────────────────────────────
+function renderizarTudo() {
+  renderizarKPIs();
+  renderizarAlertas();
+  renderizarPills();
+  aplicarFiltros();
+}
+
+// KPI cards
+function renderizarKPIs() {
+  const total      = todosContratos.length;
+  const concedidos = todosContratos.filter(c => c.status === 'CONCEDIDO').length;
+  const andamento  = todosContratos.filter(c => !c.status || c.status === 'EM ANDAMENTO' || c.status === '--------------').length;
+  const guiaNP     = todosContratos.filter(c => c.status === 'GUIA NÃO PAGA').length;
+
+  document.getElementById('kpi-section').innerHTML = [
+    { label:'Total de Contratos', valor:total,      cor:'text-brand-600', bg:'bg-brand-50'  },
+    { label:'Concedidos',         valor:concedidos, cor:'text-green-600',  bg:'bg-green-50' },
+    { label:'Em Andamento',       valor:andamento,  cor:'text-amber-600',  bg:'bg-amber-50' },
+    { label:'Guia Não Paga',      valor:guiaNP,     cor:'text-red-600',    bg:'bg-red-50'   },
+  ].map(k => `
+    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3.5">
+      <p class="text-xs text-gray-400 font-medium">${k.label}</p>
+      <p class="text-2xl font-bold ${k.cor} mt-0.5">${k.valor}</p>
+    </div>`).join('');
+}
+
+// Alertas maternidade — próximos 30 dias
+function renderizarAlertas() {
+  const hoje   = new Date(); hoje.setHours(0,0,0,0);
+  const limite = new Date(hoje); limite.setDate(hoje.getDate() + 30);
+
+  const urgentes = todosContratos
+    .filter(c => { const d = parseDate(c.previsaoNascimento); return d && d >= hoje && d <= limite; })
+    .sort((a,b) => parseDate(a.previsaoNascimento) - parseDate(b.previsaoNascimento));
+
+  const sec = document.getElementById('alerta-section');
+  if (!urgentes.length) { sec.classList.add('hidden'); return; }
+  sec.classList.remove('hidden');
+
+  document.getElementById('alerta-cards').innerHTML = urgentes.map(c => {
+    const dias = Math.ceil((parseDate(c.previsaoNascimento) - hoje) / 86400000);
+    const cls  = dias <= 7 ? 'text-red-600 bg-red-50' : dias <= 14 ? 'text-amber-600 bg-amber-50' : 'text-pink-600 bg-pink-50';
+    return `
+      <div class="alert-card bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-start justify-between gap-3 cursor-pointer hover:border-pink-200 transition-colors"
+        onclick="abrirDetalhe('${c.id}')">
+        <div class="min-w-0">
+          <p class="font-semibold text-gray-900 text-sm truncate">${esc(c.nomeCliente)}</p>
+          <p class="text-xs text-gray-500 mt-0.5">${esc(c.closer||'—')} · ${esc(c.demanda||'—')}</p>
+          <p class="text-xs text-gray-400 mt-1">Previsão: <span class="font-medium text-gray-600">${formatarData(c.previsaoNascimento)}</span></p>
+        </div>
+        <span class="flex-shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${cls}">
+          ${dias === 0 ? 'Hoje!' : dias === 1 ? 'Amanhã' : `${dias} dias`}
+        </span>
+      </div>`;
+  }).join('');
+}
+
+// Pills de filtro
+function renderizarPills() {
+  // Closer: ativos + quem aparece nos contratos (preserva histórico de inativos)
+  const nomesNosContratos = new Set(todosContratos.map(c => c.closer).filter(Boolean));
+  const nomesAtivos       = new Set(equipe.filter(e => e.ativo !== false).map(e => e.nome));
+  const todosNomes        = [...new Set([...nomesAtivos, ...nomesNosContratos])].sort();
+
+  document.getElementById('pills-closer').innerHTML =
+    ['TODOS', ...todosNomes].map(v => {
+      const inativo = v !== 'TODOS' && !nomesAtivos.has(v);
+      return `<button onclick="setFiltroCloser('${v}')"
+        class="pill text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium transition-colors
+               ${filtroCloser === v ? 'pill-active' : 'text-gray-600 hover:border-gray-300 bg-white'}
+               ${inativo ? 'opacity-50' : ''}"
+        title="${inativo ? v + ' (inativo)' : v}">
+        ${v}${inativo ? ' ·' : ''}
+      </button>`;
+    }).join('');
+
+  // Demanda
+  const demandas = [...new Set(todosContratos.map(c => c.demanda).filter(Boolean))].sort();
+  document.getElementById('pills-demanda').innerHTML =
+    ['TODOS', ...demandas].map(v => `
+      <button onclick="setFiltroDemanda('${v}')"
+        class="pill text-xs px-2.5 py-1 rounded-full border border-gray-200 font-medium transition-colors
+               ${filtroDemanda === v ? 'pill-active' : 'text-gray-600 hover:border-gray-300 bg-white'}"
+        title="${v}">${v === 'TODOS' ? 'TODOS' : abreviarDemanda(v)}</button>`
+    ).join('');
+}
+
+// ─────────────────────────────────────────────────────────
+//  ⑤ FILTROS
+// ─────────────────────────────────────────────────────────
+window.aplicarFiltros = function() {
+  const busca  = document.getElementById('busca').value.toLowerCase().trim();
+  const sortBy = document.getElementById('sort-select').value;
+
+  let lista = [...todosContratos];
+  if (filtroCloser  !== 'TODOS') lista = lista.filter(c => c.closer  === filtroCloser);
+  if (filtroDemanda !== 'TODOS') lista = lista.filter(c => c.demanda === filtroDemanda);
+  if (busca) lista = lista.filter(c =>
+    (c.nomeCliente ||'').toLowerCase().includes(busca) ||
+    (c.protocolo   ||'').toLowerCase().includes(busca) ||
+    (c.telefone    ||'').toLowerCase().includes(busca) ||
+    (c.observacoes ||'').toLowerCase().includes(busca)
+  );
+
+  lista.sort((a,b) => {
+    switch(sortBy) {
+      case 'fechamento_asc':  return (a.dataFechamento||'') > (b.dataFechamento||'') ? 1 : -1;
+      case 'nome_asc':        return (a.nomeCliente||'').localeCompare(b.nomeCliente||'');
+      case 'previsao_asc':    return (a.previsaoNascimento||'9') > (b.previsaoNascimento||'9') ? 1 : -1;
+      default:                return (a.dataFechamento||'') < (b.dataFechamento||'') ? 1 : -1;
+    }
+  });
+
+  renderizarTabela(lista);
+  const temFiltro = filtroCloser !== 'TODOS' || filtroDemanda !== 'TODOS' || busca;
+  document.getElementById('btn-limpar').classList.toggle('hidden', !temFiltro);
+};
+
+window.setFiltroCloser  = v => { filtroCloser  = v; renderizarPills(); aplicarFiltros(); };
+window.setFiltroDemanda = v => { filtroDemanda = v; renderizarPills(); aplicarFiltros(); };
+window.limparFiltros    = () => {
+  filtroCloser = 'TODOS'; filtroDemanda = 'TODOS';
+  document.getElementById('busca').value = '';
+  renderizarPills(); aplicarFiltros();
+};
+
+// ─────────────────────────────────────────────────────────
+//  ⑥ TABELA
+// ─────────────────────────────────────────────────────────
+function renderizarTabela(lista) {
+  document.getElementById('total-label').textContent =
+    `${lista.length} ${lista.length === 1 ? 'contrato' : 'contratos'}`;
+
+  if (!lista.length) {
+    document.getElementById('tbody').innerHTML = `
+      <tr><td colspan="8" class="text-center py-16 text-gray-400">
+        <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-sm">Nenhum contrato encontrado.</p>
+      </td></tr>`;
+    return;
+  }
+
+  document.getElementById('tbody').innerHTML = lista.map(c => `
+    <tr class="row-hover border-b border-gray-50 last:border-0 cursor-pointer"
+      onclick="abrirDetalhe('${c.id}')">
+      <td class="px-4 py-3">
+        <p class="font-medium text-gray-900 text-sm truncate max-w-[200px]">${esc(c.nomeCliente)}</p>
+        ${c.telefone ? `<p class="text-xs text-gray-400 mt-0.5">${esc(c.telefone)}</p>` : ''}
+      </td>
+      <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+        ${formatarData(c.dataFechamento)}
+        ${c.tempoFechamento ? `<br><span class="text-xs text-gray-400">${c.tempoFechamento}d</span>` : ''}
+      </td>
+      <td class="px-4 py-3 hidden md:table-cell">
+        <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">
+          ${esc(abreviarDemanda(c.demanda)||'—')}
+        </span>
+      </td>
+      <td class="px-4 py-3 hidden lg:table-cell text-sm text-gray-600">
+        ${esc(c.closer||'—')}
+        ${equipe.length && c.closer && equipe.find(e=>e.nome===c.closer && e.ativo===false)
+          ? '<span class="text-[10px] text-gray-400 ml-1">(inativo)</span>' : ''}
+      </td>
+      <td class="px-4 py-3 hidden xl:table-cell text-xs text-gray-500 max-w-[160px] truncate">
+        ${esc(c.protocolo||'—')}
+      </td>
+      <td class="px-4 py-3">${badgeLocal(c.local)}</td>
+      <td class="px-4 py-3">${badgeStatus(c.status)}</td>
+      <td class="px-4 py-3">
+        <button onclick="event.stopPropagation(); abrirModal('${c.id}')"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" title="Editar">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z"/>
+          </svg>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────
+//  ⑦ MODAL CONTRATO — abrir / fechar
+// ─────────────────────────────────────────────────────────
+window.abrirModal = function(id) {
+  editandoId = id || null;
+  limparFormulario();
+  renderizarSelectCloser(); // garante lista atualizada
+
+  if (id) {
+    const c = todosContratos.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('modal-title').textContent    = 'Editar Contrato';
+    document.getElementById('modal-subtitle').textContent = c.nomeCliente;
+    document.getElementById('btn-excluir').classList.remove('hidden');
+    preencherFormulario(c);
+  } else {
+    document.getElementById('modal-title').textContent    = 'Novo Contrato';
+    document.getElementById('modal-subtitle').textContent = 'Preencha os dados abaixo';
+    document.getElementById('btn-excluir').classList.add('hidden');
+    document.getElementById('f-data-fechamento').value = hoje();
+  }
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.fecharModal     = () => { document.getElementById('modal-overlay').classList.add('hidden'); document.body.style.overflow=''; editandoId=null; };
+window.fecharModalFora = e  => { if(e.target===document.getElementById('modal-overlay')) fecharModal(); };
+
+function limparFormulario() {
+  ['f-nome','f-telefone','f-data-fechamento','f-data-contrato','f-tempo','f-previsao','f-protocolo','f-obs']
+    .forEach(id => document.getElementById(id).value = '');
+  ['f-origem','f-closer','f-demanda','f-local','f-status']
+    .forEach(id => document.getElementById(id).selectedIndex = 0);
+}
+
+function preencherFormulario(c) {
+  const s = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
+  s('f-nome',            c.nomeCliente);
+  s('f-telefone',        c.telefone);
+  s('f-data-fechamento', c.dataFechamento);
+  s('f-data-contrato',   c.dataContrato);
+  s('f-tempo',           c.tempoFechamento ? c.tempoFechamento+' dias' : '');
+  s('f-previsao',        c.previsaoNascimento);
+  s('f-origem',          c.origem);
+  s('f-closer',          c.closer);
+  s('f-demanda',         c.demanda);
+  s('f-local',           c.local);
+  s('f-status',          c.status);
+  s('f-protocolo',       c.protocolo);
+  s('f-obs',             c.observacoes);
+}
+
+/** Preenche o select de Closer com equipe do Firestore.
+ *  Ativos primeiro, depois inativos (com label "(inativo)").
+ *  Valor atual do campo é preservado se já estava preenchido. */
+function renderizarSelectCloser() {
+  const sel   = document.getElementById('f-closer');
+  const atual = sel.value;
+
+  const ativos   = equipe.filter(e => e.ativo !== false);
+  const inativos = equipe.filter(e => e.ativo === false);
+
+  let html = '<option value="">— Selecione —</option>';
+  ativos.forEach(e   => { html += `<option value="${esc(e.nome)}">${esc(e.nome)}</option>`; });
+  if (inativos.length) {
+    html += '<optgroup label="── Inativos ──">';
+    inativos.forEach(e => { html += `<option value="${esc(e.nome)}" class="inativo">${esc(e.nome)} (inativo)</option>`; });
+    html += '</optgroup>';
+  }
+  sel.innerHTML = html;
+  if (atual) sel.value = atual; // preserva seleção ao re-renderizar
+}
+
+// ─────────────────────────────────────────────────────────
+//  ⑧ SALVAR CONTRATO
+// ─────────────────────────────────────────────────────────
+window.salvarContrato = async function() {
+  const nome        = document.getElementById('f-nome').value.trim();
+  const dtFechamento= document.getElementById('f-data-fechamento').value;
+  const closer      = document.getElementById('f-closer').value;
+  const demanda     = document.getElementById('f-demanda').value;
+
+  if (!nome)         { mostrarToast('Informe o nome do cliente.',          'error'); return; }
+  if (!dtFechamento) { mostrarToast('Informe a data de fechamento.',        'error'); return; }
+  if (!closer)       { mostrarToast('Selecione o Closer responsável.',      'error'); return; }
+  if (!demanda)      { mostrarToast('Selecione a Demanda.',                 'error'); return; }
+
+  const dtContrato = document.getElementById('f-data-contrato').value;
+  const dados = {
+    nomeCliente:        nome,
+    telefone:           document.getElementById('f-telefone').value.trim(),
+    dataFechamento:     dtFechamento,
+    dataContrato:       dtContrato,
+    tempoFechamento:    calcularTempoDias(dtFechamento, dtContrato),
+    previsaoNascimento: document.getElementById('f-previsao').value,
+    origem:             document.getElementById('f-origem').value,
+    closer,
+    demanda,
+    local:              document.getElementById('f-local').value,
+    status:             document.getElementById('f-status').value,
+    protocolo:          document.getElementById('f-protocolo').value.trim(),
+    observacoes:        document.getElementById('f-obs').value.trim(),
+    atualizadoEm:       serverTimestamp(),
+  };
+
+  setSalvando(true);
+  try {
+    if (editandoId) {
+      await updateDoc(doc(db, COL_CONTRATOS, editandoId), dados);
+      mostrarToast('Contrato atualizado!', 'success');
+    } else {
+      dados.criadoEm = serverTimestamp();
+      await addDoc(collection(db, COL_CONTRATOS), dados);
+      mostrarToast('Contrato cadastrado!', 'success');
+    }
+    fecharModal();
+  } catch(err) {
+    console.error(err);
+    mostrarToast('Erro ao salvar. Verifique o console.', 'error');
+  } finally {
+    setSalvando(false);
+  }
+};
+
+function setSalvando(v) {
+  document.getElementById('btn-salvar').disabled = v;
+  document.getElementById('btn-salvar-txt').textContent = v ? 'Salvando…' : 'Salvar';
+  document.getElementById('btn-salvar-spin').classList.toggle('hidden', !v);
+}
+
+// ─────────────────────────────────────────────────────────
+//  ⑨ EXCLUIR CONTRATO
+// ─────────────────────────────────────────────────────────
+window.excluirContrato = async function() {
+  if (!editandoId) return;
+  const nome = document.getElementById('f-nome').value || 'este contrato';
+  if (!confirm(`Excluir permanentemente o contrato de "${nome}"?\nEsta ação não pode ser desfeita.`)) return;
+  try {
+    await deleteDoc(doc(db, COL_CONTRATOS, editandoId));
+    mostrarToast('Contrato excluído.', 'info');
+    fecharModal();
+  } catch(err) {
+    console.error(err);
+    mostrarToast('Erro ao excluir.', 'error');
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+//  ⑩ MODAL DETALHE
+// ─────────────────────────────────────────────────────────
+window.abrirDetalhe = function(id) {
+  const c = todosContratos.find(x => x.id === id);
+  if (!c) return;
+  detalheId = id;
+
+  const linha = (label, valor) =>
+    valor ? `<div class="flex gap-3 items-start">
+      <span class="text-gray-400 w-36 flex-shrink-0 pt-0.5">${label}</span>
+      <span class="text-gray-900 font-medium flex-1">${valor}</span>
+    </div>` : '';
+
+  document.getElementById('detalhe-body').innerHTML = `
+    <div class="space-y-2.5">
+      ${linha('Cliente',         `<span class="text-base">${esc(c.nomeCliente)}</span>`)}
+      ${c.telefone ? linha('Telefone', `<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank"
+        class="text-green-600 hover:underline flex items-center gap-1">
+        ${esc(c.telefone)}
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.858L.054 23.25l5.56-1.453A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.002-1.371l-.36-.213-3.3.863.882-3.22-.235-.372A9.818 9.818 0 1112 21.818z"/>
+        </svg>
+      </a>`) : ''}
+      ${linha('Fechamento',      formatarData(c.dataFechamento))}
+      ${linha('Contrato ass.',   formatarData(c.dataContrato))}
+      ${linha('Tempo',           c.tempoFechamento ? c.tempoFechamento+' dias' : '')}
+      ${c.previsaoNascimento ? `<div class="flex gap-3 items-start">
+        <span class="text-gray-400 w-36 flex-shrink-0 pt-0.5">Prev. Nascimento</span>
+        <span class="font-semibold text-pink-600">${formatarData(c.previsaoNascimento)}</span>
+      </div>` : ''}
+      ${linha('Origem',          esc(c.origem))}
+      ${linha('Closer',          esc(c.closer))}
+      ${linha('Demanda',         esc(c.demanda))}
+      ${c.local   ? `<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0 pt-0.5">Local</span><span>${badgeLocal(c.local)}</span></div>` : ''}
+      ${c.status  ? `<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0 pt-0.5">Status</span><span>${badgeStatus(c.status)}</span></div>` : ''}
+      ${c.protocolo ? linha('Protocolo / Nº', `<span class="font-mono text-xs">${esc(c.protocolo)}</span>`) : ''}
+      ${c.observacoes ? `
+        <div class="pt-3 border-t border-gray-100">
+          <p class="text-xs text-gray-400 mb-1.5 font-medium uppercase tracking-wide">Observações</p>
+          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${esc(c.observacoes)}</p>
+        </div>` : ''}
+    </div>`;
+
+  document.getElementById('modal-detalhe').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.fecharDetalhe     = () => { document.getElementById('modal-detalhe').classList.add('hidden'); document.body.style.overflow=''; detalheId=null; };
+window.fecharDetalheFora = e  => { if(e.target===document.getElementById('modal-detalhe')) fecharDetalhe(); };
+window.editarDoDetalhe   = () => { const id=detalheId; fecharDetalhe(); abrirModal(id); };
+
+// ─────────────────────────────────────────────────────────
+//  ⑪ MODAL EQUIPE — gerenciamento de colaboradores
+// ─────────────────────────────────────────────────────────
+window.abrirEquipe = function() {
+  renderizarEquipeLista();
+  document.getElementById('modal-equipe').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+window.fecharEquipe     = () => { document.getElementById('modal-equipe').classList.add('hidden'); document.body.style.overflow=''; };
+window.fecharEquipeFora = e  => { if(e.target===document.getElementById('modal-equipe')) fecharEquipe(); };
+
+function renderizarEquipeLista() {
+  const lista = document.getElementById('equipe-lista');
+  if (!equipe.length) {
+    lista.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">Nenhum colaborador cadastrado.</p>`;
+    return;
+  }
+
+  lista.innerHTML = equipe.map(e => {
+    const ativo = e.ativo !== false;
+    return `
+    <div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-gray-100
+                ${ativo ? 'bg-white' : 'bg-gray-50 opacity-70'}">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
+                    ${ativo ? 'bg-brand-100 text-brand-700' : 'bg-gray-200 text-gray-500'}">
+          ${esc(e.nome.charAt(0).toUpperCase())}
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-800">${esc(e.nome)}</p>
+          <p class="text-[11px] ${ativo ? 'text-green-600' : 'text-gray-400'}">${ativo ? 'Ativo' : 'Inativo'}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1">
+        <!-- Toggle ativo/inativo -->
+        <button onclick="toggleAtivoColaborador('${e.id}', ${!ativo})"
+          title="${ativo ? 'Desativar' : 'Reativar'}"
+          class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors text-xs">
+          ${ativo
+            ? `<svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                 <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+               </svg>`
+            : `<svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+               </svg>`}
+        </button>
+        <!-- Excluir -->
+        <button onclick="excluirColaborador('${e.id}', '${esc(e.nome)}')"
+          title="Excluir permanentemente"
+          class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.adicionarColaborador = async function() {
+  const input = document.getElementById('equipe-novo-nome');
+  const nome  = input.value.trim();
+  if (!nome) { mostrarToast('Digite o nome do colaborador.', 'error'); return; }
+
+  // Evitar duplicata
+  if (equipe.some(e => e.nome.toLowerCase() === nome.toLowerCase())) {
+    mostrarToast('Já existe um colaborador com este nome.', 'error'); return;
+  }
+
+  try {
+    await addDoc(collection(db, COL_EQUIPE), { nome, ativo: true, criadoEm: serverTimestamp() });
+    input.value = '';
+    mostrarToast(`${nome} adicionado(a) à equipe!`, 'success');
+  } catch(err) {
+    console.error(err);
+    mostrarToast('Erro ao adicionar.', 'error');
+  }
+};
+
+window.toggleAtivoColaborador = async function(id, novoStatus) {
+  try {
+    await updateDoc(doc(db, COL_EQUIPE, id), { ativo: novoStatus });
+    mostrarToast(novoStatus ? 'Colaborador reativado.' : 'Colaborador desativado.', 'info');
+  } catch(err) {
+    console.error(err); mostrarToast('Erro ao atualizar.', 'error');
+  }
+};
+
+window.excluirColaborador = async function(id, nome) {
+  if (!confirm(`Excluir "${nome}" permanentemente da equipe?\n\nOs contratos existentes mantêm o nome registrado.`)) return;
+  try {
+    await deleteDoc(doc(db, COL_EQUIPE, id));
+    mostrarToast(`${nome} removido(a).`, 'info');
+  } catch(err) {
+    console.error(err); mostrarToast('Erro ao excluir.', 'error');
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+//  ⑫ UTILITÁRIOS
+// ─────────────────────────────────────────────────────────
+window.calcularTempo = function() {
+  const d1 = document.getElementById('f-data-fechamento').value;
+  const d2 = document.getElementById('f-data-contrato').value;
+  const r  = calcularTempoDias(d1, d2);
+  document.getElementById('f-tempo').value = r !== '' ? r + ' dias' : '';
+};
+
+function calcularTempoDias(d1, d2) {
+  if (!d1 || !d2) return '';
+  const diff = Math.round((new Date(d2) - new Date(d1)) / 86400000);
+  return isNaN(diff) ? '' : diff;
+}
+
+window.mascaraTel = function(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if      (v.length >= 11) v = v.replace(/^(\d{2})(\d{1})(\d{4})(\d{4})$/,'($1) $2 $3-$4');
+  else if (v.length > 6)   v = v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/,  '($1) $2-$3');
+  else if (v.length > 2)   v = v.replace(/^(\d{2})(\d{0,5})$/,            '($1) $2');
+  el.value = v;
+};
+
+function formatarData(str) {
+  if (!str) return '—';
+  const [y,m,d] = str.split('-');
+  return (!y||!m||!d) ? str : `${d}/${m}/${y}`;
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const [y,m,d] = str.split('-').map(Number);
+  return isNaN(y) ? null : new Date(y, m-1, d);
+}
+
+function hoje() { return new Date().toISOString().split('T')[0]; }
+
+function esc(str) {
+  return String(str||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function abreviarDemanda(v) {
+  if (!v) return '—';
+  const m = {
+    'SALÁRIO MATERNIDADE':                   'SAL. MATERNIDADE',
+    'ENTRADA BPC':                           'BPC',
+    'ENTRADA BPC - COLUNA':                  'BPC · COLUNA',
+    'ENTRADA BPC - ANEMIA FALCIFORME':       'BPC · ANEMIA',
+    'ENTRADA BPC - AUTISMO':                 'BPC · AUTISMO',
+    'ENTRADA BPC - BIPOLARIDADE':            'BPC · BIPOLAR',
+    'BPC LOAS PARA O FILHO':                 'BPC FILHO',
+    'APOSENTADORIA POR INVALIDEZ':           'APOS. INVALIDEZ',
+    'APOSENTADORIA POR TEMPO':               'APOS. TEMPO',
+    'APOSENTADORIA ESPECIAL':                'APOS. ESPECIAL',
+    'MANDADO DE SEGURANÇA':                  'MS',
+    'DEMORA NA ANÁLISE':                     'DEMORA ANÁLISE',
+    'REVISÃO DE BENEFÍCIO':                  'REV. BENEFÍCIO',
+    'REVISÃO CONTRATO EMPRÉSTIMO CONSIGNADO':'REV. CONSIG.',
+    'NEGATIVAÇÃO INDEVIDA':                  'NEG. INDEVIDA',
+    'CONTRATAÇÃO INDEVIDA DE SEGURO':        'SEG. INDEVIDO',
+    'RECURSO ADMINISTRATIVO':                'RECURSO ADM.',
+    'AUXÍLIO DOENÇA':                        'AUX. DOENÇA',
+    'PENSÃO POR MORTE':                      'PENSÃO MORTE',
+    'ACIDENTE DE TRABALHO':                  'ACID. TRABALHO',
+    'REVERTER JUSTA CAUSA':                  'JUSTA CAUSA',
+  };
+  return m[v] || v;
+}
+
+function badgeLocal(v) {
+  if (!v) return '<span class="text-xs text-gray-400">—</span>';
+  const cfg = {
+    'INSS':    'bg-blue-50 text-blue-700 border-blue-200',
+    'JUSTIÇA': 'bg-violet-50 text-violet-700 border-violet-200',
+  };
+  const cls = cfg[v] || 'bg-gray-100 text-gray-600 border-gray-200';
+  return `<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide
+    px-2 py-0.5 rounded border ${cls}">${esc(v)}</span>`;
+}
+
+function badgeStatus(v) {
+  if (!v || v === '--------------') return '<span class="text-xs text-gray-400">Em andamento</span>';
+  const cfg = {
+    'CONCEDIDO':           { c:'bg-green-50 text-green-700 border-green-200',   dot:'bg-green-500' },
+    'PROTOCOLADO':         { c:'bg-amber-50 text-amber-700 border-amber-200',   dot:'bg-amber-400' },
+    'GUIA NÃO PAGA':       { c:'bg-red-50 text-red-700 border-red-200',         dot:'bg-red-500' },
+    'EM ANDAMENTO':        { c:'bg-sky-50 text-sky-700 border-sky-200',         dot:'bg-sky-500', pulse:true },
+    'INDEFERIDO':          { c:'bg-gray-100 text-gray-600 border-gray-200',     dot:'bg-gray-400' },
+    'RECURSO':             { c:'bg-orange-50 text-orange-700 border-orange-200',dot:'bg-orange-400' },
+    'CANCELADO':           { c:'bg-gray-100 text-gray-500 border-gray-200',     dot:'bg-gray-300' },
+    'AGUARDANDO DOCUMENTO':{ c:'bg-purple-50 text-purple-700 border-purple-200',dot:'bg-purple-400' },
+    'NÃO SE APLICA':       { c:'bg-gray-100 text-gray-500 border-gray-200',     dot:'bg-gray-300' },
+  };
+  const s   = cfg[v] || { c:'bg-gray-100 text-gray-600 border-gray-200', dot:'bg-gray-400' };
+  const dot = s.pulse ? `${s.dot} dot-pulse` : s.dot;
+  return `<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide
+    px-2 py-0.5 rounded border ${s.c}">
+    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${dot}"></span>${esc(v)}</span>`;
+}
+
+function mostrarToast(msg, tipo='info') {
+  const bg = { success:'bg-green-600', error:'bg-red-600', info:'bg-gray-700' }[tipo] || 'bg-gray-700';
+  const el = document.createElement('div');
+  el.className = `toast-in pointer-events-auto ${bg} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg max-w-xs`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.classList.replace('toast-in','toast-out'); setTimeout(()=>el.remove(),350); }, 3500);
+}
+
+function atualizarConexao(ok) {
+  const badge = document.getElementById('conn-badge');
+  const dot   = document.getElementById('conn-dot');
+  badge.classList.remove('hidden'); badge.classList.add('flex');
+  badge.className = badge.className.replace(/bg-\S+/g,'') + (ok?' bg-green-50 text-green-700':' bg-red-50 text-red-700');
+  dot.className   = 'w-1.5 h-1.5 rounded-full ' + (ok?'bg-green-500':'bg-red-500');
+  document.getElementById('conn-text').textContent = ok ? 'Ao vivo' : 'Offline';
+}
+
+</script>
+</body>
+</html>
