@@ -1294,12 +1294,76 @@ window.imprimirDetalhe=function(){
 };
 
 window.imprimirRelatorio=function(){
-  const corpo=document.getElementById('relatorio-corpo');
+  // Captura os gráficos como imagem PNG antes de imprimir
+  const canvasIds=['chart-status','chart-area','chart-closer'];
+  const imagens={};
+  canvasIds.forEach(id=>{
+    const c=document.getElementById(id);
+    if(c) imagens[id]=c.toDataURL('image/png');
+  });
+
+  // Captura KPIs
+  const kpisHtml=document.getElementById('rel-kpis')?.innerHTML||'';
+  // Captura top benefícios
+  const benHtml=document.getElementById('rel-beneficios')?.innerHTML||'';
+  // Total label
+  const totalLabel=document.getElementById('rel-total-label')?.textContent||'';
+
   const area=document.getElementById('print-area');
   area.classList.remove('hidden');
-  area.innerHTML=`<style>body{font-family:Inter,sans-serif}h1{font-size:16px;font-weight:700}</style><h1>Relatório de Contratos — Costa Galvão</h1><p style="color:#6b7280;font-size:11px;margin-bottom:16px">Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>${corpo.innerHTML}`;
-  window.print();
-  setTimeout(()=>{area.classList.add('hidden');area.innerHTML='';},1500);
+  area.innerHTML=`
+    <style>
+      body{font-family:Inter,sans-serif;font-size:12px;color:#111827}
+      h1{font-size:18px;font-weight:700;margin-bottom:2px}
+      .sub{color:#6b7280;font-size:11px;margin-bottom:16px}
+      .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+      .kpi-box{border:1px solid #e5e7eb;border-radius:10px;padding:12px}
+      .kpi-label{font-size:11px;color:#9ca3af;font-weight:500}
+      .kpi-val{font-size:22px;font-weight:700;margin:2px 0}
+      .kpi-pct{font-size:11px;color:#9ca3af}
+      .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+      .chart-box{border:1px solid #f3f4f6;border-radius:10px;padding:12px;background:#f9fafb}
+      .chart-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:10px}
+      .chart-box img{width:100%;height:auto;border-radius:6px}
+      .chart-full{border:1px solid #f3f4f6;border-radius:10px;padding:12px;background:#f9fafb;margin-bottom:20px}
+      .ben-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+      .ben-label{font-size:11px;color:#374151;width:160px;flex-shrink:0}
+      .ben-bar-wrap{flex:1;background:#e5e7eb;border-radius:99px;height:6px}
+      .ben-bar{background:#6366f1;height:6px;border-radius:99px}
+      .ben-num{font-size:11px;font-weight:600;color:#374151;width:24px;text-align:right}
+      .ben-pct{font-size:11px;color:#9ca3af;width:30px;text-align:right}
+    </style>
+    <h1>Relatório de Contratos — Costa Galvão</h1>
+    <p class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR')} · ${totalLabel}</p>
+
+    <div class="kpi-grid">${kpisHtml}</div>
+
+    <div class="charts">
+      <div class="chart-box">
+        <div class="chart-title">Por Status</div>
+        ${imagens['chart-status']?`<img src="${imagens['chart-status']}"/>`:'<p style="color:#9ca3af;font-size:11px">Sem dados</p>'}
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Por Área</div>
+        ${imagens['chart-area']?`<img src="${imagens['chart-area']}"/>`:'<p style="color:#9ca3af;font-size:11px">Sem dados</p>'}
+      </div>
+    </div>
+
+    <div class="chart-full">
+      <div class="chart-title">Contratos por Closer</div>
+      ${imagens['chart-closer']?`<img src="${imagens['chart-closer']}"/>`:'<p style="color:#9ca3af;font-size:11px">Sem dados</p>'}
+    </div>
+
+    <div class="chart-full">
+      <div class="chart-title">Top Benefícios</div>
+      ${benHtml}
+    </div>`;
+
+  // Pequeno delay para garantir que as imagens carregam antes de imprimir
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{area.classList.add('hidden');area.innerHTML='';},1000);
+  },300);
 };
 
 // ══════════════════════════════════════════════════════
