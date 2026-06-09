@@ -48,29 +48,25 @@
     .kpi-card.ativo{border-color:#4F46E5!important;box-shadow:0 0 0 3px rgba(99,102,241,.15)!important}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     #tela-login{animation:fadeIn .3s ease}
-    /* filtro select customizado */
-    .filtro-select{
-      appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right .6rem center;
-      padding-right:2rem;
-    }
-    .filtro-select.ativo{
-      border-color:#4F46E5;
-      background-color:#EEF2FF;
-      color:#4F46E5;
-      font-weight:600;
+    .filtro-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center;padding-right:2rem}
+    .filtro-select.ativo{border-color:#4F46E5;background-color:#EEF2FF;color:#4F46E5;font-weight:600}
+    /* presença online */
+    .avatar-online{position:relative}
+    .avatar-online::after{content:'';position:absolute;bottom:0;right:0;width:7px;height:7px;background:#22C55E;border-radius:50%;border:1.5px solid #fff}
+    /* print */
+    @media print{
+      body *{visibility:hidden}
+      #print-area,#print-area *{visibility:visible}
+      #print-area{position:fixed;top:0;left:0;width:100%;padding:2rem;background:#fff}
     }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
 <div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+<div id="print-area" class="hidden"></div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  TELA DE LOGIN                                        -->
-<!-- ══════════════════════════════════════════════════════ -->
+<!-- ══ LOGIN ════════════════════════════════════════════ -->
 <div id="tela-login" class="min-h-screen flex items-center justify-center p-4">
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm w-full max-w-sm p-8">
     <div class="flex items-center gap-3 mb-8">
@@ -96,8 +92,7 @@
         <div class="relative">
           <input id="login-senha" type="password" class="input-form pr-10" placeholder="••••••••"
             onkeydown="if(event.key==='Enter') fazerLogin()"/>
-          <button type="button" onclick="toggleSenha()"
-            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+          <button type="button" onclick="toggleSenha()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -118,34 +113,45 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  APP                                                  -->
-<!-- ══════════════════════════════════════════════════════ -->
+<!-- ══ APP ═══════════════════════════════════════════════ -->
 <div id="app" class="hidden">
 
   <!-- HEADER -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <div>
+        <div class="hidden sm:block">
           <span class="font-semibold text-sm text-gray-900 leading-none">Costa Galvão</span>
           <span class="block text-[10px] text-gray-400 leading-none mt-0.5 uppercase tracking-wide">Contratos Fechados</span>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+
+      <!-- Centro: quem está online -->
+      <div class="flex items-center gap-1.5 flex-1 justify-center">
+        <span class="text-[11px] text-gray-400 font-medium hidden sm:inline">Online:</span>
+        <div id="online-avatars" class="flex items-center -space-x-1.5"></div>
+      </div>
+
+      <!-- Direita: ações -->
+      <div class="flex items-center gap-1.5 flex-shrink-0">
         <div id="conn-badge" class="hidden items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-full">
           <span id="conn-dot" class="w-1.5 h-1.5 rounded-full"></span>
           <span id="conn-text"></span>
         </div>
-        <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
+
+        <!-- Usuário logado -->
+        <div class="flex items-center gap-2 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg">
           <div class="w-5 h-5 rounded-full bg-brand-100 flex items-center justify-center text-[10px] font-bold text-brand-700" id="user-avatar"></div>
           <span class="text-xs font-medium text-gray-700" id="user-label"></span>
         </div>
+
         <!-- Relatório -->
         <button onclick="abrirRelatorio()" title="Relatório"
           class="p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
@@ -153,6 +159,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
         </button>
+
+        <!-- Auditoria (admin) -->
+        <button id="btn-auditoria" onclick="abrirAuditoria()" title="Auditoria"
+          class="hidden p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </button>
+
         <!-- Equipe (admin) -->
         <button id="btn-equipe" onclick="abrirEquipe()" title="Gerenciar Equipe"
           class="hidden p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
@@ -160,14 +175,24 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 100-8 4 4 0 000 8zm6 0a3 3 0 100-6 3 3 0 000 6zM3 14a3 3 0 100-6 3 3 0 000 6z"/>
           </svg>
         </button>
-        <!-- Novo -->
+
+        <!-- Backup (admin) -->
+        <button id="btn-backup" onclick="fazerBackup()" title="Backup JSON"
+          class="hidden p-2 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </button>
+
+        <!-- Novo contrato -->
         <button onclick="abrirModal()"
           class="flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
-          <span class="hidden sm:inline">Novo Contrato</span>
+          <span class="hidden sm:inline">Novo</span>
         </button>
+
         <!-- Sair -->
         <button onclick="sair()" title="Sair"
           class="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
@@ -182,7 +207,7 @@
   <!-- MAIN -->
   <main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-5">
 
-    <!-- KPIs — 3 cards -->
+    <!-- KPIs -->
     <section class="grid grid-cols-3 gap-3">
       <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('')">
         <p class="text-xs text-gray-400 font-medium">Total de Contratos</p>
@@ -201,81 +226,45 @@
       </div>
     </section>
 
-    <!-- FILTROS REESTRUTURADOS -->
+    <!-- FILTROS -->
     <div class="bg-white rounded-xl border border-gray-200 p-4">
-      <!-- Linha 1: busca + closer + status -->
       <div class="flex flex-wrap gap-2 items-center">
-        <!-- Busca -->
         <div class="relative flex-1 min-w-[200px]">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7 7 0 1116.65 16.65z"/>
           </svg>
           <input id="busca" type="text" placeholder="Buscar por nome, protocolo ou telefone…"
-            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50"
-            oninput="aplicarFiltros()"/>
+            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50" oninput="aplicarFiltros()"/>
         </div>
-
-        <!-- Closer -->
-        <select id="sel-closer" onchange="aplicarFiltros()"
-          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[130px]">
+        <select id="sel-closer" onchange="aplicarFiltros()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[130px]">
           <option value="">Todos os closers</option>
         </select>
-
-        <!-- Status -->
-        <select id="sel-status" onchange="aplicarFiltros()"
-          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+        <select id="sel-status" onchange="aplicarFiltros()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
           <option value="">Todos os status</option>
-          <option>EM ANDAMENTO</option>
-          <option>PROTOCOLADO</option>
-          <option>CONCEDIDO</option>
-          <option>INDEFERIDO</option>
+          <option>EM ANDAMENTO</option><option>PROTOCOLADO</option><option>CONCEDIDO</option><option>INDEFERIDO</option>
         </select>
-
-        <!-- Local -->
-        <select id="sel-local" onchange="aplicarFiltros()"
-          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
-          <option value="">INSS e Justiça</option>
-          <option>INSS</option>
-          <option>JUSTIÇA</option>
+        <select id="sel-local" onchange="aplicarFiltros()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+          <option value="">INSS e Justiça</option><option>INSS</option><option>JUSTIÇA</option>
         </select>
-
-        <!-- Limpar -->
-        <button id="btn-limpar" onclick="limparFiltros()"
-          class="hidden text-xs text-brand-600 hover:underline font-medium px-2">
-          Limpar filtros
-        </button>
+        <button id="btn-limpar" onclick="limparFiltros()" class="hidden text-xs text-brand-600 hover:underline font-medium px-2">Limpar filtros</button>
       </div>
-
-      <!-- Linha 2: Categoria + Benefício encadeado -->
       <div class="flex flex-wrap gap-2 items-center mt-2.5 pt-2.5 border-t border-gray-100">
         <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Área</span>
-
-        <!-- Categoria -->
-        <select id="sel-categoria" onchange="atualizarBeneficios()"
-          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+        <select id="sel-categoria" onchange="atualizarBeneficios()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
           <option value="">Todas as áreas</option>
           <option value="PREVIDENCIÁRIO">Previdenciário</option>
           <option value="CONSUMIDOR">Consumidor</option>
           <option value="BANCÁRIO">Bancário</option>
           <option value="TRABALHISTA">Trabalhista</option>
         </select>
-
         <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
         </svg>
-
-        <!-- Benefício (populado via JS) -->
-        <select id="sel-beneficio" onchange="aplicarFiltros()"
-          class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[200px]">
+        <select id="sel-beneficio" onchange="aplicarFiltros()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[200px]">
           <option value="">Todos os benefícios</option>
         </select>
-
-        <!-- Ordenar -->
         <div class="ml-auto flex items-center gap-2">
-          <span class="text-[11px] text-gray-400 uppercase tracking-wide font-medium hidden sm:inline">Ordenar</span>
-          <select id="sort-select" onchange="aplicarFiltros()"
-            class="filtro-select text-xs border border-gray-200 rounded-lg py-2 pl-2 pr-7 bg-gray-50 text-gray-600">
+          <select id="sort-select" onchange="aplicarFiltros()" class="filtro-select text-xs border border-gray-200 rounded-lg py-2 pl-2 pr-7 bg-gray-50 text-gray-600">
             <option value="fechamento_desc">Fechamento ↓</option>
             <option value="fechamento_asc">Fechamento ↑</option>
             <option value="nome_asc">Nome A–Z</option>
@@ -288,6 +277,14 @@
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <span id="total-label" class="text-sm text-gray-500">—</span>
+        <!-- Imprimir lista -->
+        <button onclick="imprimirLista()" title="Imprimir / Salvar PDF"
+          class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-600 border border-gray-200 hover:border-brand-300 px-2.5 py-1.5 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Imprimir
+        </button>
       </div>
       <div class="table-wrap">
         <table class="w-full text-sm">
@@ -321,9 +318,7 @@
 </div>
 
 <!-- ══ MODAL CONTRATO ═════════════════════════════════════ -->
-<div id="modal-overlay"
-  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
-  onclick="fecharModalFora(event)">
+<div id="modal-overlay" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto" onclick="fecharModalFora(event)">
   <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-2xl my-auto">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <div>
@@ -336,38 +331,76 @@
         </svg>
       </button>
     </div>
-    <div class="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+    <div class="px-6 py-5 space-y-5 max-h-[72vh] overflow-y-auto">
 
+      <!-- Identificação -->
       <fieldset>
-        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Identificação</legend>
+        <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Identificação do Cliente</legend>
         <div class="grid sm:grid-cols-2 gap-3">
           <div class="sm:col-span-2">
             <label class="label-form">Nome Completo *</label>
             <input id="f-nome" type="text" class="input-form" placeholder="Maria da Silva Santos"/>
           </div>
+          <!-- Menor de idade -->
+          <div class="sm:col-span-2">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none">
+              <input type="checkbox" id="f-menor" onchange="toggleMenor()"
+                class="w-4 h-4 rounded border-gray-300 text-brand-600 cursor-pointer"/>
+              <span class="text-sm text-gray-700 font-medium">Cliente é menor de idade</span>
+              <span class="text-[11px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium">BPC / Outros</span>
+            </label>
+          </div>
+          <!-- Campos do responsável (ocultos por padrão) -->
+          <div id="bloco-responsavel" class="sm:col-span-2 hidden">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+              <p class="text-xs font-semibold text-amber-700 uppercase tracking-widest">Responsável Legal</p>
+              <div class="grid sm:grid-cols-2 gap-3">
+                <div class="sm:col-span-2">
+                  <label class="label-form">Nome do Responsável *</label>
+                  <input id="f-resp-nome" type="text" class="input-form" placeholder="Nome completo do pai/mãe/responsável"/>
+                </div>
+                <div>
+                  <label class="label-form">Grau de Parentesco</label>
+                  <select id="f-resp-parentesco" class="input-form">
+                    <option value="">— Selecione —</option>
+                    <option>Mãe</option>
+                    <option>Pai</option>
+                    <option>Avó / Avô</option>
+                    <option>Responsável Legal</option>
+                    <option>Tutor</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="label-form">CPF do Responsável</label>
+                  <input id="f-resp-cpf" type="text" class="input-form" placeholder="000.000.000-00"
+                    oninput="mascaraCPF(this)" maxlength="14"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
-            <label class="label-form">Telefone</label>
-            <input id="f-telefone" type="tel" class="input-form" placeholder="(87) 9 9999-9999"
-              oninput="mascaraTel(this)" maxlength="17"/>
+            <label class="label-form">Telefone 1</label>
+            <input id="f-telefone" type="tel" class="input-form" placeholder="(87) 9 9999-9999" oninput="mascaraTel(this)" maxlength="17"/>
+          </div>
+          <div>
+            <label class="label-form">Telefone 2</label>
+            <input id="f-telefone2" type="tel" class="input-form" placeholder="(87) 9 9999-9999" oninput="mascaraTel(this)" maxlength="17"/>
           </div>
           <div>
             <label class="label-form">Origem do Lead</label>
             <select id="f-origem" class="input-form">
               <option value="">— Selecione —</option>
-              <option>Tráfego Facebook</option>
-              <option>Instagram Orgânico</option>
-              <option>Indicação Cliente</option>
-              <option>Indicação Jucely</option>
-              <option>Indicação Joelma</option>
-              <option>Indicação Isabel</option>
-              <option>Google Ads</option>
-              <option>WhatsApp Orgânico</option>
-              <option>Outro</option>
+              <option>Tráfego Facebook</option><option>Instagram Orgânico</option>
+              <option>Indicação Cliente</option><option>Indicação Jucely</option>
+              <option>Indicação Joelma</option><option>Indicação Isabel</option>
+              <option>Google Ads</option><option>WhatsApp Orgânico</option><option>Outro</option>
             </select>
           </div>
         </div>
       </fieldset>
 
+      <!-- Datas -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Datas</legend>
         <div class="grid sm:grid-cols-3 gap-3">
@@ -386,6 +419,7 @@
         </div>
       </fieldset>
 
+      <!-- Processo -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Processo</legend>
         <div class="grid sm:grid-cols-2 gap-3">
@@ -410,9 +444,7 @@
           <div>
             <label class="label-form">Local</label>
             <select id="f-local" class="input-form">
-              <option value="">— Selecione —</option>
-              <option>INSS</option>
-              <option>JUSTIÇA</option>
+              <option value="">— Selecione —</option><option>INSS</option><option>JUSTIÇA</option>
             </select>
           </div>
           <div>
@@ -431,12 +463,13 @@
         </div>
       </fieldset>
 
+      <!-- Observações -->
       <fieldset>
         <legend class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Observações</legend>
-        <textarea id="f-obs" rows="3" class="input-form resize-y"
-          placeholder="Histórico, andamento atual, documentos pendentes…"></textarea>
+        <textarea id="f-obs" rows="3" class="input-form resize-y" placeholder="Histórico, andamento atual, documentos pendentes…"></textarea>
       </fieldset>
 
+      <!-- Auditoria -->
       <div id="f-auditoria" class="hidden bg-gray-50 rounded-lg px-4 py-3 space-y-1">
         <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Rastreamento</p>
         <p class="text-xs text-gray-500" id="f-criado-por"></p>
@@ -444,11 +477,9 @@
       </div>
     </div>
     <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-3">
-      <button id="btn-excluir" onclick="excluirContrato()"
-        class="hidden text-sm text-red-500 hover:text-red-700 font-medium">Excluir</button>
+      <button id="btn-excluir" onclick="excluirContrato()" class="hidden text-sm text-red-500 hover:text-red-700 font-medium">Excluir</button>
       <div class="flex items-center gap-2 ml-auto">
-        <button onclick="fecharModal()"
-          class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+        <button onclick="fecharModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
         <button id="btn-salvar" onclick="salvarContrato()"
           class="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">
           <span id="btn-salvar-txt">Salvar</span>
@@ -463,17 +494,24 @@
 </div>
 
 <!-- ══ MODAL DETALHE ══════════════════════════════════════ -->
-<div id="modal-detalhe"
-  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
-  onclick="fecharDetalheFora(event)">
+<div id="modal-detalhe" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto" onclick="fecharDetalheFora(event)">
   <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-lg my-auto">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <h2 class="font-semibold text-gray-900">Detalhes do Contrato</h2>
-      <button onclick="fecharDetalhe()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
+      <div class="flex items-center gap-1">
+        <!-- Imprimir detalhe -->
+        <button onclick="imprimirDetalhe()" title="Imprimir / Salvar PDF"
+          class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+        </button>
+        <button onclick="fecharDetalhe()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     </div>
     <div id="detalhe-body" class="px-6 py-5 max-h-[70vh] overflow-y-auto text-sm space-y-2.5"></div>
     <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
@@ -484,39 +522,41 @@
 </div>
 
 <!-- ══ MODAL RELATÓRIO ════════════════════════════════════ -->
-<div id="modal-relatorio"
-  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-6 overflow-y-auto"
-  onclick="fecharRelatFora(event)">
+<div id="modal-relatorio" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-6 overflow-y-auto" onclick="fecharRelatFora(event)">
   <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-4xl my-auto">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <div>
         <h2 class="font-semibold text-gray-900">Relatório de Contratos</h2>
         <p class="text-xs text-gray-400 mt-0.5">Análise visual interativa</p>
       </div>
-      <button onclick="fecharRelatorio()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
+      <div class="flex items-center gap-1.5">
+        <button onclick="imprimirRelatorio()" title="Imprimir / Salvar PDF"
+          class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-600 border border-gray-200 hover:border-brand-300 px-2.5 py-1.5 rounded-lg transition-colors">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Imprimir
+        </button>
+        <button onclick="fecharRelatorio()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     </div>
-
-    <!-- Filtros do relatório -->
     <div class="px-6 py-3 border-b border-gray-100 flex flex-wrap gap-2 items-center bg-gray-50">
-      <span class="text-xs text-gray-500 font-medium">Filtrar relatório:</span>
-      <select id="rel-closer" onchange="renderizarRelatorio()"
-        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+      <span class="text-xs text-gray-500 font-medium">Filtrar:</span>
+      <select id="rel-closer" onchange="renderizarRelatorio()" class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
         <option value="">Todos os closers</option>
       </select>
-      <select id="rel-periodo" onchange="renderizarRelatorio()"
-        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+      <select id="rel-periodo" onchange="renderizarRelatorio()" class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
         <option value="">Todo o período</option>
         <option value="30">Últimos 30 dias</option>
         <option value="90">Últimos 90 dias</option>
         <option value="180">Últimos 6 meses</option>
         <option value="365">Último ano</option>
       </select>
-      <select id="rel-area" onchange="renderizarRelatorio()"
-        class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
+      <select id="rel-area" onchange="renderizarRelatorio()" class="filtro-select text-xs border border-gray-200 rounded-lg py-1.5 pl-2 pr-7 bg-white text-gray-600">
         <option value="">Todas as áreas</option>
         <option value="PREVIDENCIÁRIO">Previdenciário</option>
         <option value="CONSUMIDOR">Consumidor</option>
@@ -525,13 +565,8 @@
       </select>
       <span id="rel-total-label" class="ml-auto text-xs text-gray-400 font-medium"></span>
     </div>
-
-    <div class="px-6 py-5 space-y-6 max-h-[75vh] overflow-y-auto">
-
-      <!-- Linha 1: KPIs do relatório -->
+    <div id="relatorio-corpo" class="px-6 py-5 space-y-6 max-h-[75vh] overflow-y-auto">
       <div id="rel-kpis" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
-
-      <!-- Linha 2: Status (pizza) + Área (barras) -->
       <div class="grid sm:grid-cols-2 gap-5">
         <div class="bg-gray-50 rounded-xl p-4">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Por Status</p>
@@ -542,27 +577,40 @@
           <div class="relative h-52"><canvas id="chart-area"></canvas></div>
         </div>
       </div>
-
-      <!-- Linha 3: Por Closer (barras horizontais) -->
       <div class="bg-gray-50 rounded-xl p-4">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Contratos por Closer</p>
         <div class="relative h-56"><canvas id="chart-closer"></canvas></div>
       </div>
-
-      <!-- Linha 4: Top benefícios -->
       <div class="bg-gray-50 rounded-xl p-4">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Top Benefícios</p>
         <div id="rel-beneficios" class="space-y-2"></div>
       </div>
+    </div>
+  </div>
+</div>
 
+<!-- ══ MODAL AUDITORIA ════════════════════════════════════ -->
+<div id="modal-auditoria" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto" onclick="fecharAuditoriaFora(event)">
+  <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-2xl my-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div>
+        <h2 class="font-semibold text-gray-900">Auditoria do Sistema</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Rastreamento de todas as ações em tempo real</p>
+      </div>
+      <button onclick="fecharAuditoria()" class="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 max-h-[70vh] overflow-y-auto">
+      <div id="auditoria-lista" class="space-y-2"></div>
     </div>
   </div>
 </div>
 
 <!-- ══ MODAL EQUIPE ════════════════════════════════════════ -->
-<div id="modal-equipe"
-  class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
-  onclick="fecharEquipeFora(event)">
+<div id="modal-equipe" class="fixed inset-0 z-50 hidden bg-gray-900/40 backdrop-blur-[2px] flex items-start justify-center p-4 sm:p-8 overflow-y-auto" onclick="fecharEquipeFora(event)">
   <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md my-auto">
     <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
       <div>
@@ -588,22 +636,19 @@
         <input type="checkbox" id="equipe-novo-admin" class="rounded"/>
         <label for="equipe-novo-admin" class="text-xs text-gray-600">Administrador</label>
       </div>
-      <button onclick="adicionarColaborador()"
-        class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">
-        Adicionar
-      </button>
+      <button onclick="adicionarColaborador()" class="w-full py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg">Adicionar</button>
     </div>
   </div>
 </div>
 
-<!-- ══ FIREBASE + LÓGICA ══════════════════════════════════ -->
+<!-- ══ FIREBASE ═══════════════════════════════════════════ -->
 <script type="module">
 import { initializeApp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getFirestore, collection, doc,
-  addDoc, updateDoc, deleteDoc,
-  onSnapshot, serverTimestamp, query, orderBy
+  addDoc, updateDoc, deleteDoc, setDoc,
+  onSnapshot, serverTimestamp, query, orderBy, limit, where
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -617,238 +662,260 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
-const COL = 'contratos';
+const COL        = 'contratos';
 const COL_EQUIPE = 'equipe';
+const COL_AUDIT  = 'auditoria';
+const COL_ONLINE = 'presenca';
 
-// ── MAPA DE BENEFÍCIOS POR ÁREA ────────────────────────
+// ── BENEFÍCIOS ────────────────────────────────────────
 const BENEFICIOS = {
-  'PREVIDENCIÁRIO': [
-    'SALÁRIO MATERNIDADE',
-    'BPC LOAS',
-    'AUXÍLIO DOENÇA',
-    'APOSENTADORIA POR INVALIDEZ',
-    'APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO',
-    'APOSENTADORIA ESPECIAL',
-    'APOSENTADORIA RURAL',
-    'APOSENTADORIA POR IDADE',
-    'PENSÃO POR MORTE',
-    'AUXÍLIO-ACIDENTE',
-    'AUXÍLIO RECLUSÃO',
-    'MANDADO DE SEGURANÇA',
-    'REVISÃO DE BENEFÍCIO',
-  ],
-  'CONSUMIDOR': [
-    'NEGATIVAÇÃO INDEVIDA',
-    'COBRANÇA INDEVIDA',
-    'CONTRATAÇÃO INDEVIDA DE SEGURO',
-    'DANO MORAL',
-  ],
-  'BANCÁRIO': [
-    'REVISÃO CONTRATO BANCÁRIO',
-    'REVISÃO EMPRÉSTIMO CONSIGNADO',
-    'REVISÃO FINANCIAMENTO',
-    'PORTABILIDADE',
-  ],
-  'TRABALHISTA': [
-    'REVERTER JUSTA CAUSA',
-    'RECONHECIMENTO DE VÍNCULO',
-    'VERBAS TRABALHISTAS',
-    'ACIDENTE DE TRABALHO',
-    'RESCISÃO INDIRETA',
-  ],
+  'PREVIDENCIÁRIO': ['SALÁRIO MATERNIDADE','BPC LOAS','AUXÍLIO DOENÇA','APOSENTADORIA POR INVALIDEZ','APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO','APOSENTADORIA ESPECIAL','APOSENTADORIA RURAL','APOSENTADORIA POR IDADE','PENSÃO POR MORTE','AUXÍLIO-ACIDENTE','AUXÍLIO RECLUSÃO','MANDADO DE SEGURANÇA','REVISÃO DE BENEFÍCIO'],
+  'CONSUMIDOR':     ['NEGATIVAÇÃO INDEVIDA','COBRANÇA INDEVIDA','CONTRATAÇÃO INDEVIDA DE SEGURO','DANO MORAL'],
+  'BANCÁRIO':       ['REVISÃO CONTRATO BANCÁRIO','REVISÃO EMPRÉSTIMO CONSIGNADO','REVISÃO FINANCIAMENTO','PORTABILIDADE'],
+  'TRABALHISTA':    ['REVERTER JUSTA CAUSA','RECONHECIMENTO DE VÍNCULO','VERBAS TRABALHISTAS','ACIDENTE DE TRABALHO','RESCISÃO INDIRETA'],
 };
-
-// Mapa reverso: benefício → área
 const BEN_AREA = {};
-Object.entries(BENEFICIOS).forEach(([area, lista]) => lista.forEach(b => { BEN_AREA[b] = area; }));
-
-// Legado: benefícios antigos (planilha) → normalizar área
-function resolverArea(demanda) {
-  if (!demanda) return 'PREVIDENCIÁRIO';
-  if (BEN_AREA[demanda]) return BEN_AREA[demanda];
-  // heurística para dados importados
-  if (/BPC|MATERNIDADE|AUXÍLIO|APOSENTADORIA|PENSÃO|RECLUSÃO|ACIDENTE|SEGURANÇA|BENEFÍCIO|DEMORA/i.test(demanda)) return 'PREVIDENCIÁRIO';
-  if (/NEGATIVAÇÃO|SEGURO|COBRANÇA/i.test(demanda)) return 'CONSUMIDOR';
-  if (/CONTRATO|EMPRÉSTIMO|FINANCIAMENTO|CONSIG/i.test(demanda)) return 'BANCÁRIO';
-  if (/JUSTA CAUSA|VÍNCULO|TRABALHISTA|RESCISÃO/i.test(demanda)) return 'TRABALHISTA';
+Object.entries(BENEFICIOS).forEach(([a,l])=>l.forEach(b=>{BEN_AREA[b]=a;}));
+function resolverArea(d){
+  if(!d) return 'PREVIDENCIÁRIO';
+  if(BEN_AREA[d]) return BEN_AREA[d];
+  if(/BPC|MATERNIDADE|AUXÍLIO|APOSENTADORIA|PENSÃO|RECLUSÃO|SEGURANÇA|BENEFÍCIO|DEMORA/i.test(d)) return 'PREVIDENCIÁRIO';
+  if(/NEGATIVAÇÃO|SEGURO|COBRANÇA/i.test(d)) return 'CONSUMIDOR';
+  if(/CONTRATO|EMPRÉSTIMO|FINANCIAMENTO|CONSIG/i.test(d)) return 'BANCÁRIO';
+  if(/JUSTA CAUSA|VÍNCULO|TRABALHISTA|RESCISÃO/i.test(d)) return 'TRABALHISTA';
   return 'PREVIDENCIÁRIO';
 }
 
-// ── ESTADO ─────────────────────────────────────────────
+// ── ESTADO ────────────────────────────────────────────
 let todosContratos = [];
 let equipe         = [];
 let usuarioAtual   = null;
 let editandoId     = null;
 let detalheId      = null;
-let filtroKPI      = '';
-// charts
-let chartStatus = null, chartArea = null, chartCloser = null;
+let listaAtual     = []; // para impressão
+let chartStatus=null, chartArea=null, chartCloser=null;
+let presencaId     = null; // doc id de presença do usuário atual
 
-// ── SESSÃO ─────────────────────────────────────────────
-const salvarSessao  = u  => sessionStorage.setItem('cg_u', JSON.stringify(u));
-const carregarSessao= () => { try { return JSON.parse(sessionStorage.getItem('cg_u')); } catch { return null; } };
-const limparSessao  = () => sessionStorage.removeItem('cg_u');
+// ── SESSÃO ────────────────────────────────────────────
+const salvarSessao   = u  => sessionStorage.setItem('cg_u',JSON.stringify(u));
+const carregarSessao = () => { try{return JSON.parse(sessionStorage.getItem('cg_u'));}catch{return null;} };
+const limparSessao   = () => sessionStorage.removeItem('cg_u');
 
-// ── LISTENERS ──────────────────────────────────────────
-onSnapshot(query(collection(db, COL_EQUIPE), orderBy('nome')), snap => {
-  equipe = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  // select login
-  const sel = document.getElementById('login-nome');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— Selecione —</option>';
-  equipe.filter(e => e.ativo !== false).forEach(e => {
-    sel.innerHTML += `<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;
-  });
-  if (cur) sel.value = cur;
-  // select closer filtro e relatório
-  ['sel-closer','rel-closer'].forEach(id => {
-    const s = document.getElementById(id);
-    if (!s) return;
-    const v = s.value;
-    s.innerHTML = id === 'sel-closer'
-      ? '<option value="">Todos os closers</option>'
-      : '<option value="">Todos os closers</option>';
-    equipe.filter(e => e.ativo !== false).forEach(e => {
-      s.innerHTML += `<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;
-    });
-    if (v) s.value = v;
+// ── LISTENERS ─────────────────────────────────────────
+// Equipe
+onSnapshot(query(collection(db,COL_EQUIPE),orderBy('nome')), snap=>{
+  equipe=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const sel=document.getElementById('login-nome');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  equipe.filter(e=>e.ativo!==false).forEach(e=>{sel.innerHTML+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});
+  if(cur) sel.value=cur;
+  ['sel-closer','rel-closer'].forEach(id=>{
+    const s=document.getElementById(id);if(!s)return;
+    const v=s.value;
+    s.innerHTML=`<option value="">${id==='sel-closer'?'Todos os closers':'Todos os closers'}</option>`;
+    equipe.filter(e=>e.ativo!==false).forEach(e=>{s.innerHTML+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});
+    if(v)s.value=v;
   });
   preencherSelectEquipeForm();
   renderizarEquipeLista();
 });
 
-onSnapshot(
-  query(collection(db, COL), orderBy('criadoEm', 'desc')),
-  snap => {
-    todosContratos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    atualizarKPIs();
-    aplicarFiltros();
-    atualizarConexao(true);
-  },
-  err => { console.error(err); atualizarConexao(false); }
-);
+// Contratos
+onSnapshot(query(collection(db,COL),orderBy('criadoEm','desc')), snap=>{
+  todosContratos=snap.docs.map(d=>({id:d.id,...d.data()}));
+  atualizarKPIs();aplicarFiltros();atualizarConexao(true);
+}, err=>{console.error(err);atualizarConexao(false);});
+
+// Presença online
+onSnapshot(collection(db,COL_ONLINE), snap=>{
+  const agora=Date.now();
+  const online=snap.docs
+    .map(d=>d.data())
+    .filter(d=>d.ts&&(agora-d.ts.toMillis?.()||0)<90000); // 90s timeout
+  renderizarOnline(online);
+});
+
+// Auditoria realtime
+let unsubAudit=null;
+function iniciarAuditoria(){
+  if(unsubAudit) return;
+  unsubAudit=onSnapshot(
+    query(collection(db,COL_AUDIT),orderBy('criadoEm','desc'),limit(100)),
+    snap=>{
+      const logs=snap.docs.map(d=>d.data());
+      renderizarAuditoriaLista(logs);
+    }
+  );
+}
+
+// ══════════════════════════════════════════════════════
+//  PRESENÇA ONLINE
+// ══════════════════════════════════════════════════════
+async function registrarPresenca(){
+  if(!usuarioAtual) return;
+  const docRef=doc(db,COL_ONLINE,usuarioAtual.id);
+  await setDoc(docRef,{nome:usuarioAtual.nome,ts:serverTimestamp()},{merge:true});
+  presencaId=usuarioAtual.id;
+  // heartbeat a cada 60s
+  setInterval(async()=>{
+    if(usuarioAtual) await setDoc(doc(db,COL_ONLINE,usuarioAtual.id),{nome:usuarioAtual.nome,ts:serverTimestamp()},{merge:true});
+  },60000);
+}
+
+async function removerPresenca(){
+  if(presencaId) try{await deleteDoc(doc(db,COL_ONLINE,presencaId));}catch{}
+}
+
+function renderizarOnline(lista){
+  const el=document.getElementById('online-avatars');
+  if(!el) return;
+  if(!lista.length){el.innerHTML='';return;}
+  el.innerHTML=lista.map(u=>`
+    <div class="avatar-online w-7 h-7 rounded-full bg-brand-100 border-2 border-white flex items-center justify-center text-[11px] font-bold text-brand-700" title="${esc(u.nome)} (online)">
+      ${esc(u.nome.charAt(0).toUpperCase())}
+    </div>`).join('');
+}
 
 // ══════════════════════════════════════════════════════
 //  LOGIN
 // ══════════════════════════════════════════════════════
-window.fazerLogin = async function() {
-  const nome  = document.getElementById('login-nome').value.trim();
-  const senha = document.getElementById('login-senha').value.trim();
-  if (!nome)  { mostrarToast('Selecione seu nome.','error'); return; }
-  if (!senha) { mostrarToast('Informe sua senha.','error'); return; }
-  setLoginLoad(true);
-  await sleep(350);
-  const col = equipe.find(e => e.nome === nome && e.ativo !== false);
-  if (!col)             { mostrarToast('Usuário não encontrado.','error'); setLoginLoad(false); return; }
-  if (col.senha !== senha) { mostrarToast('Senha incorreta.','error'); setLoginLoad(false); return; }
-  usuarioAtual = { id: col.id, nome: col.nome, admin: col.admin === true };
+window.fazerLogin=async function(){
+  const nome=document.getElementById('login-nome').value.trim();
+  const senha=document.getElementById('login-senha').value.trim();
+  if(!nome){mostrarToast('Selecione seu nome.','error');return;}
+  if(!senha){mostrarToast('Informe sua senha.','error');return;}
+  setLoginLoad(true);await sleep(350);
+  const col=equipe.find(e=>e.nome===nome&&e.ativo!==false);
+  if(!col){mostrarToast('Usuário não encontrado.','error');setLoginLoad(false);return;}
+  if(col.senha!==senha){mostrarToast('Senha incorreta.','error');setLoginLoad(false);return;}
+  usuarioAtual={id:col.id,nome:col.nome,admin:col.admin===true};
   salvarSessao(usuarioAtual);
-  entrarNoApp();
-  setLoginLoad(false);
+  await registrarPresenca();
+  entrarNoApp();setLoginLoad(false);
 };
 
-function entrarNoApp() {
+function entrarNoApp(){
   document.getElementById('tela-login').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('user-label').textContent = usuarioAtual.nome;
-  document.getElementById('user-avatar').textContent = usuarioAtual.nome.charAt(0).toUpperCase();
-  if (usuarioAtual.admin) document.getElementById('btn-equipe').classList.remove('hidden');
+  document.getElementById('user-label').textContent=usuarioAtual.nome;
+  document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();
+  if(usuarioAtual.admin){
+    document.getElementById('btn-equipe').classList.remove('hidden');
+    document.getElementById('btn-auditoria').classList.remove('hidden');
+    document.getElementById('btn-backup').classList.remove('hidden');
+  }
 }
 
-window.sair = () => { limparSessao(); usuarioAtual=null; document.getElementById('app').classList.add('hidden'); document.getElementById('tela-login').classList.remove('hidden'); document.getElementById('login-senha').value=''; };
-window.toggleSenha = () => { const el=document.getElementById('login-senha'); el.type=el.type==='password'?'text':'password'; };
-function setLoginLoad(v) { document.getElementById('btn-login').disabled=v; document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar'; document.getElementById('btn-login-spin').classList.toggle('hidden',!v); }
+window.sair=async function(){
+  await removerPresenca();
+  limparSessao();usuarioAtual=null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('tela-login').classList.remove('hidden');
+  document.getElementById('login-senha').value='';
+};
 
-window.addEventListener('load', () => { const s=carregarSessao(); if(s){ usuarioAtual=s; entrarNoApp(); } });
+window.toggleSenha=()=>{const el=document.getElementById('login-senha');el.type=el.type==='password'?'text':'password';};
+function setLoginLoad(v){document.getElementById('btn-login').disabled=v;document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar';document.getElementById('btn-login-spin').classList.toggle('hidden',!v);}
+
+window.addEventListener('load',async()=>{
+  const s=carregarSessao();
+  if(s){usuarioAtual=s;await registrarPresenca();entrarNoApp();}
+});
+
+window.addEventListener('beforeunload',()=>{removerPresenca();});
+
+// ══════════════════════════════════════════════════════
+//  AUDITORIA — registrar ação
+// ══════════════════════════════════════════════════════
+async function registrarAudit(acao, detalhe){
+  try{
+    await addDoc(collection(db,COL_AUDIT),{
+      usuario: usuarioAtual?.nome||'—',
+      acao, detalhe,
+      criadoEm: serverTimestamp(),
+    });
+  }catch(e){console.warn('Audit error',e);}
+}
 
 // ══════════════════════════════════════════════════════
 //  KPIs
 // ══════════════════════════════════════════════════════
-function atualizarKPIs() {
-  document.getElementById('kpi-total').textContent      = todosContratos.length;
-  document.getElementById('kpi-concedidos').textContent = todosContratos.filter(c=>c.status==='CONCEDIDO').length;
-  document.getElementById('kpi-protocolado').textContent= todosContratos.filter(c=>c.status==='PROTOCOLADO').length;
+function atualizarKPIs(){
+  document.getElementById('kpi-total').textContent      =todosContratos.length;
+  document.getElementById('kpi-concedidos').textContent =todosContratos.filter(c=>c.status==='CONCEDIDO').length;
+  document.getElementById('kpi-protocolado').textContent=todosContratos.filter(c=>c.status==='PROTOCOLADO').length;
 }
 
-window.filtrarKPI = function(status) {
-  filtroKPI = status;
+window.filtrarKPI=function(status){
   document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
-  const idx = ['','CONCEDIDO','PROTOCOLADO'].indexOf(status);
+  const idx=['','CONCEDIDO','PROTOCOLADO'].indexOf(status);
   if(idx>=0) document.querySelectorAll('.kpi-card')[idx]?.classList.add('ativo');
-  document.getElementById('sel-status').value = status;
+  document.getElementById('sel-status').value=status;
   aplicarFiltros();
 };
 
 // ══════════════════════════════════════════════════════
-//  FILTROS ENCADEADOS
+//  FILTROS
 // ══════════════════════════════════════════════════════
-window.atualizarBeneficios = function() {
-  const cat = document.getElementById('sel-categoria').value;
-  const sel = document.getElementById('sel-beneficio');
-  sel.innerHTML = '<option value="">Todos os benefícios</option>';
-  if (cat && BENEFICIOS[cat]) {
-    BENEFICIOS[cat].forEach(b => { sel.innerHTML += `<option value="${esc(b)}">${esc(b)}</option>`; });
-  }
-  // destacar select de categoria
-  document.getElementById('sel-categoria').classList.toggle('ativo', !!cat);
+window.atualizarBeneficios=function(){
+  const cat=document.getElementById('sel-categoria').value;
+  const sel=document.getElementById('sel-beneficio');
+  sel.innerHTML='<option value="">Todos os benefícios</option>';
+  if(cat&&BENEFICIOS[cat]) BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});
+  document.getElementById('sel-categoria').classList.toggle('ativo',!!cat);
   aplicarFiltros();
 };
 
-window.popularBeneficiosForm = function() {
-  const cat = document.getElementById('f-categoria').value;
-  const sel = document.getElementById('f-demanda');
-  sel.innerHTML = '<option value="">— Selecione —</option>';
-  if (cat && BENEFICIOS[cat]) {
-    BENEFICIOS[cat].forEach(b => { sel.innerHTML += `<option value="${esc(b)}">${esc(b)}</option>`; });
-  }
+window.popularBeneficiosForm=function(){
+  const cat=document.getElementById('f-categoria').value;
+  const sel=document.getElementById('f-demanda');
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  if(cat&&BENEFICIOS[cat]) BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});
 };
 
-window.aplicarFiltros = function() {
-  const busca    = document.getElementById('busca')?.value.toLowerCase().trim()||'';
-  const closer   = document.getElementById('sel-closer')?.value||'';
-  const status   = document.getElementById('sel-status')?.value||'';
-  const local    = document.getElementById('sel-local')?.value||'';
-  const cat      = document.getElementById('sel-categoria')?.value||'';
-  const beneficio= document.getElementById('sel-beneficio')?.value||'';
-  const sortBy   = document.getElementById('sort-select')?.value||'fechamento_desc';
+window.aplicarFiltros=function(){
+  const busca  =document.getElementById('busca')?.value.toLowerCase().trim()||'';
+  const closer =document.getElementById('sel-closer')?.value||'';
+  const status =document.getElementById('sel-status')?.value||'';
+  const local  =document.getElementById('sel-local')?.value||'';
+  const cat    =document.getElementById('sel-categoria')?.value||'';
+  const ben    =document.getElementById('sel-beneficio')?.value||'';
+  const sortBy =document.getElementById('sort-select')?.value||'fechamento_desc';
 
-  // highlight selects ativos
-  ['sel-closer','sel-status','sel-local','sel-beneficio'].forEach(id => {
-    const el=document.getElementById(id);
-    if(el) el.classList.toggle('ativo', !!el.value);
+  ['sel-closer','sel-status','sel-local','sel-beneficio'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle('ativo',!!el.value);
   });
 
-  let lista = [...todosContratos];
-  if (closer)    lista = lista.filter(c => c.closer===closer);
-  if (status)    lista = lista.filter(c => (c.status||'EM ANDAMENTO')===status);
-  if (local)     lista = lista.filter(c => c.local===local);
-  if (cat)       lista = lista.filter(c => resolverArea(c.demanda)===cat);
-  if (beneficio) lista = lista.filter(c => c.demanda===beneficio);
-  if (busca)     lista = lista.filter(c =>
+  let lista=[...todosContratos];
+  if(closer)  lista=lista.filter(c=>c.closer===closer);
+  if(status)  lista=lista.filter(c=>(c.status||'EM ANDAMENTO')===status);
+  if(local)   lista=lista.filter(c=>c.local===local);
+  if(cat)     lista=lista.filter(c=>resolverArea(c.demanda)===cat);
+  if(ben)     lista=lista.filter(c=>c.demanda===ben);
+  if(busca)   lista=lista.filter(c=>
     (c.nomeCliente||'').toLowerCase().includes(busca)||
     (c.protocolo||'').toLowerCase().includes(busca)||
-    (c.telefone||'').toLowerCase().includes(busca)
+    (c.telefone||'').toLowerCase().includes(busca)||
+    (c.telefone2||'').toLowerCase().includes(busca)
   );
-
   lista.sort((a,b)=>{
-    if(sortBy==='fechamento_asc') return (a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;
-    if(sortBy==='nome_asc')       return (a.nomeCliente||'').localeCompare(b.nomeCliente||'');
-    return (a.dataFechamento||'')<(b.dataFechamento||'')?1:-1;
+    if(sortBy==='fechamento_asc') return(a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;
+    if(sortBy==='nome_asc') return(a.nomeCliente||'').localeCompare(b.nomeCliente||'');
+    return(a.dataFechamento||'')<(b.dataFechamento||'')?1:-1;
   });
-
+  listaAtual=lista;
   renderizarTabela(lista);
-  const temFiltro = busca||closer||status||local||cat||beneficio;
-  document.getElementById('btn-limpar')?.classList.toggle('hidden', !temFiltro);
+  const temFiltro=busca||closer||status||local||cat||ben;
+  document.getElementById('btn-limpar')?.classList.toggle('hidden',!temFiltro);
 };
 
-window.limparFiltros = () => {
-  ['busca'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['sel-closer','sel-status','sel-local','sel-categoria','sel-beneficio','sort-select'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el){ el.selectedIndex=0; el.classList.remove('ativo'); }
+window.limparFiltros=()=>{
+  document.getElementById('busca').value='';
+  ['sel-closer','sel-status','sel-local','sel-categoria','sel-beneficio'].forEach(id=>{
+    const el=document.getElementById(id);if(el){el.selectedIndex=0;el.classList.remove('ativo');}
   });
   document.getElementById('sel-beneficio').innerHTML='<option value="">Todos os benefícios</option>';
-  filtroKPI='';
   document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
   aplicarFiltros();
 };
@@ -856,35 +923,31 @@ window.limparFiltros = () => {
 // ══════════════════════════════════════════════════════
 //  TABELA
 // ══════════════════════════════════════════════════════
-function renderizarTabela(lista) {
-  document.getElementById('total-label').textContent = `${lista.length} ${lista.length===1?'contrato':'contratos'}`;
-  if (!lista.length) {
+function renderizarTabela(lista){
+  document.getElementById('total-label').textContent=`${lista.length} ${lista.length===1?'contrato':'contratos'}`;
+  if(!lista.length){
     document.getElementById('tbody').innerHTML=`<tr><td colspan="8" class="text-center py-16 text-gray-400"><svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/></svg><p class="text-sm">Nenhum contrato encontrado.</p></td></tr>`;
     return;
   }
-  document.getElementById('tbody').innerHTML = lista.map(c=>`
+  document.getElementById('tbody').innerHTML=lista.map(c=>`
     <tr class="row-hover border-b border-gray-50 last:border-0 cursor-pointer" onclick="abrirDetalhe('${c.id}')">
       <td class="px-4 py-3">
         <p class="font-medium text-gray-900 text-sm truncate max-w-[200px]">${esc(c.nomeCliente)}</p>
+        ${c.menor?'<span class="text-[10px] bg-amber-50 text-amber-700 px-1 rounded font-medium">Menor</span>':''}
         ${c.telefone?`<p class="text-xs text-gray-400 mt-0.5">${esc(c.telefone)}</p>`:''}
       </td>
       <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
         ${formatarData(c.dataFechamento)}
         ${c.tempoFechamento!==''&&c.tempoFechamento!==undefined?`<br><span class="text-xs text-gray-400">${c.tempoFechamento}d</span>`:''}
       </td>
-      <td class="px-4 py-3 hidden md:table-cell">
-        <span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">${esc(abreviar(c.demanda))}</span>
-      </td>
+      <td class="px-4 py-3 hidden md:table-cell"><span class="text-xs font-medium text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">${esc(abreviar(c.demanda))}</span></td>
       <td class="px-4 py-3 hidden lg:table-cell text-sm text-gray-600">${esc(c.closer||'—')}</td>
       <td class="px-4 py-3 hidden xl:table-cell text-xs text-gray-500 max-w-[150px] truncate">${esc(c.protocolo||'—')}</td>
       <td class="px-4 py-3">${badgeLocal(c.local)}</td>
       <td class="px-4 py-3">${badgeStatus(c.status)}</td>
       <td class="px-4 py-3">
-        <button onclick="event.stopPropagation();abrirModal('${c.id}')"
-          class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z"/>
-          </svg>
+        <button onclick="event.stopPropagation();abrirModal('${c.id}')" class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z"/></svg>
         </button>
       </td>
     </tr>`).join('');
@@ -893,126 +956,148 @@ function renderizarTabela(lista) {
 // ══════════════════════════════════════════════════════
 //  MODAL CONTRATO
 // ══════════════════════════════════════════════════════
-window.abrirModal = function(id) {
-  editandoId = id||null;
-  limparForm();
-  preencherSelectEquipeForm();
-  if (id) {
-    const c=todosContratos.find(x=>x.id===id);
-    if(!c) return;
-    document.getElementById('modal-title').textContent    = 'Editar Contrato';
-    document.getElementById('modal-subtitle').textContent = c.nomeCliente;
+window.abrirModal=function(id){
+  editandoId=id||null;
+  limparForm();preencherSelectEquipeForm();
+  if(id){
+    const c=todosContratos.find(x=>x.id===id);if(!c)return;
+    document.getElementById('modal-title').textContent='Editar Contrato';
+    document.getElementById('modal-subtitle').textContent=c.nomeCliente;
     document.getElementById('btn-excluir').classList.remove('hidden');
-    // setar área primeiro para popular benefícios
-    const area = c.categoria || resolverArea(c.demanda);
-    document.getElementById('f-categoria').value = area;
-    popularBeneficiosForm();
-    preencherForm(c);
-    const aud=document.getElementById('f-auditoria');
-    aud.classList.remove('hidden');
+    const area=c.categoria||resolverArea(c.demanda);
+    document.getElementById('f-categoria').value=area;
+    popularBeneficiosForm();preencherForm(c);
+    if(c.menor){document.getElementById('f-menor').checked=true;document.getElementById('bloco-responsavel').classList.remove('hidden');}
+    document.getElementById('f-auditoria').classList.remove('hidden');
     document.getElementById('f-criado-por').textContent=`Criado por ${c.criadoPor||'—'} em ${formatarDataHora(c.criadoEm)}`;
     document.getElementById('f-editado-por').textContent=c.editadoPor?`Editado por ${c.editadoPor} em ${formatarDataHora(c.atualizadoEm)}`:'';
   } else {
-    document.getElementById('modal-title').textContent    = 'Novo Contrato';
-    document.getElementById('modal-subtitle').textContent = `Registrando como ${usuarioAtual?.nome||''}`;
+    document.getElementById('modal-title').textContent='Novo Contrato';
+    document.getElementById('modal-subtitle').textContent=`Registrando como ${usuarioAtual?.nome||''}`;
     document.getElementById('btn-excluir').classList.add('hidden');
     document.getElementById('f-auditoria').classList.add('hidden');
-    document.getElementById('f-data-fechamento').value = hoje();
+    document.getElementById('f-data-fechamento').value=hoje();
   }
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.body.style.overflow='hidden';
 };
 
-window.fecharModal     = () => { document.getElementById('modal-overlay').classList.add('hidden'); document.body.style.overflow=''; editandoId=null; };
-window.fecharModalFora = e  => { if(e.target===document.getElementById('modal-overlay')) fecharModal(); };
+window.fecharModal    =()=>{document.getElementById('modal-overlay').classList.add('hidden');document.body.style.overflow='';editandoId=null;};
+window.fecharModalFora=e =>{if(e.target===document.getElementById('modal-overlay'))fecharModal();};
 
-function limparForm() {
-  ['f-nome','f-telefone','f-data-fechamento','f-data-contrato','f-tempo','f-protocolo','f-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['f-origem','f-closer','f-categoria','f-local'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+window.toggleMenor=function(){
+  const checked=document.getElementById('f-menor').checked;
+  document.getElementById('bloco-responsavel').classList.toggle('hidden',!checked);
+};
+
+function limparForm(){
+  ['f-nome','f-telefone','f-telefone2','f-data-fechamento','f-data-contrato','f-tempo','f-protocolo','f-obs','f-resp-nome','f-resp-cpf'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-origem','f-closer','f-categoria','f-local','f-resp-parentesco'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('f-status').value='EM ANDAMENTO';
   document.getElementById('f-demanda').innerHTML='<option value="">— Selecione a área primeiro —</option>';
+  document.getElementById('f-menor').checked=false;
+  document.getElementById('bloco-responsavel').classList.add('hidden');
 }
 
-function preencherForm(c) {
+function preencherForm(c){
   const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};
-  s('f-nome',c.nomeCliente); s('f-telefone',c.telefone);
-  s('f-data-fechamento',c.dataFechamento); s('f-data-contrato',c.dataContrato);
+  s('f-nome',c.nomeCliente);s('f-telefone',c.telefone);s('f-telefone2',c.telefone2);
+  s('f-data-fechamento',c.dataFechamento);s('f-data-contrato',c.dataContrato);
   s('f-tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'');
-  s('f-origem',c.origem); s('f-closer',c.closer);
-  s('f-demanda',c.demanda); s('f-local',c.local);
-  s('f-status',c.status||'EM ANDAMENTO'); s('f-protocolo',c.protocolo); s('f-obs',c.observacoes);
+  s('f-origem',c.origem);s('f-closer',c.closer);s('f-demanda',c.demanda);
+  s('f-local',c.local);s('f-status',c.status||'EM ANDAMENTO');
+  s('f-protocolo',c.protocolo);s('f-obs',c.observacoes);
+  s('f-resp-nome',c.respNome);s('f-resp-parentesco',c.respParentesco);s('f-resp-cpf',c.respCPF);
 }
 
-function preencherSelectEquipeForm() {
-  const sel=document.getElementById('f-closer');
-  if(!sel) return;
+function preencherSelectEquipeForm(){
+  const sel=document.getElementById('f-closer');if(!sel)return;
   const cur=sel.value;
   const ativos=equipe.filter(e=>e.ativo!==false);
   const inativos=equipe.filter(e=>e.ativo===false);
   let html='<option value="">— Selecione —</option>';
   ativos.forEach(e=>{html+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});
   if(inativos.length){html+='<optgroup label="── Inativos ──">';inativos.forEach(e=>{html+=`<option value="${esc(e.nome)}">${esc(e.nome)} (inativo)</option>`;});html+='</optgroup>';}
-  sel.innerHTML=html;
-  if(cur)sel.value=cur;
+  sel.innerHTML=html;if(cur)sel.value=cur;
 }
 
 // ══════════════════════════════════════════════════════
 //  SALVAR / EXCLUIR
 // ══════════════════════════════════════════════════════
-window.salvarContrato = async function() {
+window.salvarContrato=async function(){
   const nome=document.getElementById('f-nome').value.trim();
   const dtF=document.getElementById('f-data-fechamento').value;
   const closer=document.getElementById('f-closer').value;
   const demanda=document.getElementById('f-demanda').value;
-  const categoria=document.getElementById('f-categoria').value;
+  const menor=document.getElementById('f-menor').checked;
   if(!nome){mostrarToast('Informe o nome.','error');return;}
   if(!dtF){mostrarToast('Informe a data de fechamento.','error');return;}
   if(!closer){mostrarToast('Selecione o Closer.','error');return;}
   if(!demanda){mostrarToast('Selecione o Benefício.','error');return;}
+  if(menor&&!document.getElementById('f-resp-nome').value.trim()){mostrarToast('Informe o nome do responsável.','error');return;}
   const dtC=document.getElementById('f-data-contrato').value;
+  const cat=document.getElementById('f-categoria').value;
   const dados={
-    nomeCliente:nome,telefone:document.getElementById('f-telefone').value.trim(),
+    nomeCliente:nome,
+    telefone:document.getElementById('f-telefone').value.trim(),
+    telefone2:document.getElementById('f-telefone2').value.trim(),
     dataFechamento:dtF,dataContrato:dtC,
     tempoFechamento:calcularTempoDias(dtF,dtC),
     origem:document.getElementById('f-origem').value,
-    closer,demanda,categoria:categoria||resolverArea(demanda),
+    closer,demanda,categoria:cat||resolverArea(demanda),
     local:document.getElementById('f-local').value,
     status:document.getElementById('f-status').value||'EM ANDAMENTO',
     protocolo:document.getElementById('f-protocolo').value.trim(),
     observacoes:document.getElementById('f-obs').value.trim(),
+    menor,
+    respNome:menor?document.getElementById('f-resp-nome').value.trim():'',
+    respParentesco:menor?document.getElementById('f-resp-parentesco').value:'',
+    respCPF:menor?document.getElementById('f-resp-cpf').value.trim():'',
     atualizadoEm:serverTimestamp(),editadoPor:usuarioAtual?.nome||'—',
   };
   setSalvando(true);
-  try {
-    if(editandoId){await updateDoc(doc(db,COL,editandoId),dados);mostrarToast('Atualizado!','success');}
-    else{dados.criadoEm=serverTimestamp();dados.criadoPor=usuarioAtual?.nome||'—';await addDoc(collection(db,COL),dados);mostrarToast('Cadastrado!','success');}
+  try{
+    if(editandoId){
+      await updateDoc(doc(db,COL,editandoId),dados);
+      await registrarAudit('EDITOU',`Contrato de ${nome}`);
+      mostrarToast('Atualizado!','success');
+    } else {
+      dados.criadoEm=serverTimestamp();dados.criadoPor=usuarioAtual?.nome||'—';
+      await addDoc(collection(db,COL),dados);
+      await registrarAudit('CADASTROU',`Novo contrato: ${nome}`);
+      mostrarToast('Cadastrado!','success');
+    }
     fecharModal();
-  } catch(err){console.error(err);mostrarToast('Erro ao salvar.','error');}
+  }catch(err){console.error(err);mostrarToast('Erro ao salvar.','error');}
   finally{setSalvando(false);}
 };
 
 function setSalvando(v){document.getElementById('btn-salvar').disabled=v;document.getElementById('btn-salvar-txt').textContent=v?'Salvando…':'Salvar';document.getElementById('btn-salvar-spin').classList.toggle('hidden',!v);}
 
-window.excluirContrato = async function() {
-  if(!editandoId) return;
+window.excluirContrato=async function(){
+  if(!editandoId)return;
   const nome=document.getElementById('f-nome').value||'este contrato';
-  if(!confirm(`Excluir "${nome}"?`)) return;
-  try{await deleteDoc(doc(db,COL,editandoId));mostrarToast('Excluído.','info');fecharModal();}
-  catch(err){mostrarToast('Erro.','error');}
+  if(!confirm(`Excluir "${nome}"?`))return;
+  try{
+    await deleteDoc(doc(db,COL,editandoId));
+    await registrarAudit('EXCLUIU',`Contrato de ${nome}`);
+    mostrarToast('Excluído.','info');fecharModal();
+  }catch{mostrarToast('Erro.','error');}
 };
 
 // ══════════════════════════════════════════════════════
 //  MODAL DETALHE
 // ══════════════════════════════════════════════════════
-window.abrirDetalhe = function(id) {
-  const c=todosContratos.find(x=>x.id===id);
-  if(!c) return;
+window.abrirDetalhe=function(id){
+  const c=todosContratos.find(x=>x.id===id);if(!c)return;
   detalheId=id;
   const l=(label,valor)=>valor?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">${label}</span><span class="text-gray-900 font-medium flex-1">${valor}</span></div>`:'';
   document.getElementById('detalhe-body').innerHTML=`
     <div class="space-y-2.5">
-      ${l('Cliente',`<span class="text-base">${esc(c.nomeCliente)}</span>`)}
-      ${c.telefone?l('Telefone',`<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline">${esc(c.telefone)} ↗</a>`):''}
+      ${l('Cliente',`<span class="text-base">${esc(c.nomeCliente)}</span>${c.menor?'<span class="ml-2 text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium">Menor de Idade</span>':''}`)}
+      ${c.menor&&c.respNome?`<div class="bg-amber-50 rounded-lg px-3 py-2 space-y-1"><p class="text-xs font-semibold text-amber-700">Responsável Legal</p><p class="text-sm text-gray-800">${esc(c.respNome)} ${c.respParentesco?'('+esc(c.respParentesco)+')':''}</p>${c.respCPF?`<p class="text-xs text-gray-500 font-mono">CPF: ${esc(c.respCPF)}</p>`:''}</div>`:''}
+      ${c.telefone?l('Telefone 1',`<a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline">${esc(c.telefone)} ↗</a>`):''}
+      ${c.telefone2?l('Telefone 2',`<a href="https://wa.me/55${c.telefone2.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline">${esc(c.telefone2)} ↗</a>`):''}
       ${l('Fechamento',formatarData(c.dataFechamento))}
       ${l('Contrato ass.',formatarData(c.dataContrato))}
       ${l('Tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'')}
@@ -1021,9 +1106,9 @@ window.abrirDetalhe = function(id) {
       ${l('Área',esc(c.categoria||resolverArea(c.demanda)))}
       ${l('Benefício',esc(c.demanda))}
       ${c.local?`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Local</span><span>${badgeLocal(c.local)}</span></div>`:''}
-      ${`<div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Status</span><span>${badgeStatus(c.status)}</span></div>`}
+      <div class="flex gap-3 items-start"><span class="text-gray-400 w-36 flex-shrink-0">Status</span><span>${badgeStatus(c.status)}</span></div>
       ${l('Protocolo',`<span class="font-mono text-xs">${esc(c.protocolo)}</span>`)}
-      ${c.observacoes?`<div class="pt-3 border-t border-gray-100"><p class="text-xs text-gray-400 mb-1.5 font-semibold uppercase tracking-wide">Observações</p><p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">${esc(c.observacoes)}</p></div>`:''}
+      ${c.observacoes?`<div class="pt-3 border-t border-gray-100"><p class="text-xs text-gray-400 mb-1.5 font-semibold uppercase tracking-wide">Observações</p><p class="text-sm text-gray-700 whitespace-pre-wrap">${esc(c.observacoes)}</p></div>`:''}
       <div class="pt-3 border-t border-gray-100 space-y-1">
         <p class="text-[11px] text-gray-400">Criado por <span class="font-medium text-gray-600">${esc(c.criadoPor||'—')}</span> em ${formatarDataHora(c.criadoEm)}</p>
         ${c.editadoPor?`<p class="text-[11px] text-gray-400">Editado por <span class="font-medium text-gray-600">${esc(c.editadoPor)}</span> em ${formatarDataHora(c.atualizadoEm)}</p>`:''}
@@ -1033,148 +1118,217 @@ window.abrirDetalhe = function(id) {
   document.body.style.overflow='hidden';
 };
 
-window.fecharDetalhe    = () => { document.getElementById('modal-detalhe').classList.add('hidden'); document.body.style.overflow=''; detalheId=null; };
-window.fecharDetalheFora= e  => { if(e.target===document.getElementById('modal-detalhe')) fecharDetalhe(); };
-window.editarDoDetalhe  = () => { const id=detalheId; fecharDetalhe(); abrirModal(id); };
+window.fecharDetalhe    =()=>{document.getElementById('modal-detalhe').classList.add('hidden');document.body.style.overflow='';detalheId=null;};
+window.fecharDetalheFora=e =>{if(e.target===document.getElementById('modal-detalhe'))fecharDetalhe();};
+window.editarDoDetalhe  =()=>{const id=detalheId;fecharDetalhe();abrirModal(id);};
 
 // ══════════════════════════════════════════════════════
-//  RELATÓRIO
+//  AUDITORIA MODAL
 // ══════════════════════════════════════════════════════
-window.abrirRelatorio = function() {
-  document.getElementById('modal-relatorio').classList.remove('hidden');
+window.abrirAuditoria=function(){
+  iniciarAuditoria();
+  document.getElementById('modal-auditoria').classList.remove('hidden');
   document.body.style.overflow='hidden';
-  renderizarRelatorio();
 };
-window.fecharRelatorio  = () => { document.getElementById('modal-relatorio').classList.add('hidden'); document.body.style.overflow=''; };
-window.fecharRelatFora  = e  => { if(e.target===document.getElementById('modal-relatorio')) fecharRelatorio(); };
+window.fecharAuditoria    =()=>{document.getElementById('modal-auditoria').classList.add('hidden');document.body.style.overflow='';};
+window.fecharAuditoriaFora=e =>{if(e.target===document.getElementById('modal-auditoria'))fecharAuditoria();};
 
-window.renderizarRelatorio = function() {
-  const closerFil = document.getElementById('rel-closer')?.value||'';
-  const periodoFil= parseInt(document.getElementById('rel-periodo')?.value||'0')||0;
-  const areaFil   = document.getElementById('rel-area')?.value||'';
-
-  let lista = [...todosContratos];
-  if (closerFil) lista = lista.filter(c=>c.closer===closerFil);
-  if (areaFil)   lista = lista.filter(c=>resolverArea(c.demanda)===areaFil);
-  if (periodoFil) {
-    const corte = new Date(); corte.setDate(corte.getDate()-periodoFil);
-    lista = lista.filter(c => {
-      if (!c.dataFechamento) return false;
-      return new Date(c.dataFechamento) >= corte;
-    });
-  }
-
-  document.getElementById('rel-total-label').textContent = `${lista.length} contratos`;
-
-  const total = lista.length || 1;
-
-  // KPIs relatório
-  const statusCount = {};
-  lista.forEach(c => { const s=c.status||'EM ANDAMENTO'; statusCount[s]=(statusCount[s]||0)+1; });
-  const kpiData = [
-    {label:'Total',valor:lista.length,cor:'text-brand-600',bg:'bg-brand-50'},
-    {label:'Concedidos',valor:statusCount['CONCEDIDO']||0,cor:'text-green-600',bg:'bg-green-50'},
-    {label:'Protocolados',valor:statusCount['PROTOCOLADO']||0,cor:'text-amber-600',bg:'bg-amber-50'},
-    {label:'Indeferidos',valor:statusCount['INDEFERIDO']||0,cor:'text-red-600',bg:'bg-red-50'},
-  ];
-  document.getElementById('rel-kpis').innerHTML = kpiData.map(k=>`
-    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3">
-      <p class="text-xs text-gray-400 font-medium">${k.label}</p>
-      <p class="text-xl font-bold ${k.cor} mt-0.5">${k.valor}</p>
-      <p class="text-[11px] text-gray-400">${k.valor&&lista.length?Math.round(k.valor/lista.length*100):0}%</p>
-    </div>`).join('');
-
-  // Chart Status (donut)
-  const statusLabels = ['EM ANDAMENTO','PROTOCOLADO','CONCEDIDO','INDEFERIDO'];
-  const statusColors = ['#38BDF8','#FCD34D','#4ADE80','#F87171'];
-  const statusVals   = statusLabels.map(s=>statusCount[s]||0);
-
-  if (chartStatus) chartStatus.destroy();
-  chartStatus = new Chart(document.getElementById('chart-status'), {
-    type:'doughnut',
-    data:{ labels:statusLabels, datasets:[{ data:statusVals, backgroundColor:statusColors, borderWidth:2, borderColor:'#F9FAFB' }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:10}, boxWidth:10 } } } }
-  });
-
-  // Chart Área (barras)
-  const areaCount = {};
-  lista.forEach(c=>{ const a=resolverArea(c.demanda); areaCount[a]=(areaCount[a]||0)+1; });
-  const areaLabels = Object.keys(areaCount).sort();
-  const areaColors = ['#818CF8','#34D399','#FB923C','#F472B6'];
-
-  if (chartArea) chartArea.destroy();
-  chartArea = new Chart(document.getElementById('chart-area'), {
-    type:'bar',
-    data:{ labels:areaLabels, datasets:[{ data:areaLabels.map(a=>areaCount[a]), backgroundColor:areaColors, borderRadius:6, borderWidth:0 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{font:{size:10}}, grid:{color:'#F1F5F9'} }, x:{ ticks:{font:{size:10}}, grid:{display:false} } } }
-  });
-
-  // Chart Closer (barras horizontais)
-  const closerCount = {};
-  lista.forEach(c=>{ if(c.closer) closerCount[c.closer]=(closerCount[c.closer]||0)+1; });
-  const closerLabels = Object.keys(closerCount).sort((a,b)=>closerCount[b]-closerCount[a]);
-  const closerVals   = closerLabels.map(cl=>closerCount[cl]);
-
-  if (chartCloser) chartCloser.destroy();
-  chartCloser = new Chart(document.getElementById('chart-closer'), {
-    type:'bar',
-    data:{ labels:closerLabels, datasets:[{ data:closerVals, backgroundColor:'#818CF8', borderRadius:4, borderWidth:0 }] },
-    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true, ticks:{font:{size:10}}, grid:{color:'#F1F5F9'} }, y:{ ticks:{font:{size:10}}, grid:{display:false} } } }
-  });
-
-  // Top benefícios (barras de progresso)
-  const benCount = {};
-  lista.forEach(c=>{ if(c.demanda) benCount[c.demanda]=(benCount[c.demanda]||0)+1; });
-  const benTop = Object.entries(benCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  const benMax = benTop[0]?.[1]||1;
-  document.getElementById('rel-beneficios').innerHTML = benTop.map(([nome,qtd])=>`
-    <div class="flex items-center gap-3">
-      <span class="text-xs text-gray-600 w-44 flex-shrink-0 truncate" title="${esc(nome)}">${esc(abreviar(nome))}</span>
-      <div class="flex-1 bg-gray-200 rounded-full h-2">
-        <div class="bg-brand-500 h-2 rounded-full transition-all" style="width:${Math.round(qtd/benMax*100)}%"></div>
-      </div>
-      <span class="text-xs font-semibold text-gray-700 w-8 text-right">${qtd}</span>
-      <span class="text-xs text-gray-400 w-8 text-right">${Math.round(qtd/total*100)}%</span>
-    </div>`).join('');
-};
-
-// ══════════════════════════════════════════════════════
-//  MODAL EQUIPE
-// ══════════════════════════════════════════════════════
-window.abrirEquipe     = () => { document.getElementById('modal-equipe').classList.remove('hidden'); document.body.style.overflow='hidden'; };
-window.fecharEquipe    = () => { document.getElementById('modal-equipe').classList.add('hidden'); document.body.style.overflow=''; };
-window.fecharEquipeFora= e  => { if(e.target===document.getElementById('modal-equipe')) fecharEquipe(); };
-
-function renderizarEquipeLista() {
-  const lista=document.getElementById('equipe-lista');
-  if(!lista) return;
-  if(!equipe.length){lista.innerHTML='<p class="text-sm text-gray-400 text-center py-4">Nenhum colaborador.</p>';return;}
-  lista.innerHTML=equipe.map(e=>{
-    const ativo=e.ativo!==false;
-    return `<div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-gray-100 ${ativo?'bg-white':'bg-gray-50 opacity-60'}">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${ativo?'bg-brand-100 text-brand-700':'bg-gray-200 text-gray-500'}">${esc(e.nome.charAt(0).toUpperCase())}</div>
-        <div class="min-w-0">
-          <p class="text-sm font-medium text-gray-800 truncate">${esc(e.nome)}</p>
-          <p class="text-[11px] ${ativo?'text-green-600':'text-gray-400'}">${ativo?'Ativo':'Inativo'}${e.admin?' · Admin':''}</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-1 flex-shrink-0">
-        <button onclick="editarSenha('${e.id}','${esc(e.nome)}')" title="Alterar senha" class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-        </button>
-        <button onclick="toggleAtivo('${e.id}',${!ativo})" title="${ativo?'Desativar':'Reativar'}" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">
-          ${ativo?`<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`:`<svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`}
-        </button>
-        <button onclick="excluirColaborador('${e.id}','${esc(e.nome)}')" title="Excluir" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-        </button>
+function renderizarAuditoriaLista(logs){
+  const el=document.getElementById('auditoria-lista');
+  if(!el)return;
+  if(!logs.length){el.innerHTML='<p class="text-sm text-gray-400 text-center py-8">Nenhuma ação registrada ainda.</p>';return;}
+  const icones={
+    'CADASTROU':'text-green-600 bg-green-50',
+    'EDITOU':   'text-amber-600 bg-amber-50',
+    'EXCLUIU':  'text-red-600 bg-red-50',
+  };
+  el.innerHTML=logs.map(l=>{
+    const cls=icones[l.acao]||'text-gray-600 bg-gray-100';
+    return `<div class="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
+      <span class="text-[11px] font-bold px-2 py-0.5 rounded ${cls} flex-shrink-0 mt-0.5">${esc(l.acao)}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm text-gray-800"><span class="font-semibold">${esc(l.usuario)}</span> — ${esc(l.detalhe)}</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">${formatarDataHora(l.criadoEm)}</p>
       </div>
     </div>`;
   }).join('');
 }
 
-window.adicionarColaborador = async function() {
+// ══════════════════════════════════════════════════════
+//  RELATÓRIO
+// ══════════════════════════════════════════════════════
+window.abrirRelatorio=function(){
+  document.getElementById('modal-relatorio').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  renderizarRelatorio();
+};
+window.fecharRelatorio =()=>{document.getElementById('modal-relatorio').classList.add('hidden');document.body.style.overflow='';};
+window.fecharRelatFora =e =>{if(e.target===document.getElementById('modal-relatorio'))fecharRelatorio();};
+
+window.renderizarRelatorio=function(){
+  const cf=document.getElementById('rel-closer')?.value||'';
+  const pf=parseInt(document.getElementById('rel-periodo')?.value||'0')||0;
+  const af=document.getElementById('rel-area')?.value||'';
+  let lista=[...todosContratos];
+  if(cf) lista=lista.filter(c=>c.closer===cf);
+  if(af) lista=lista.filter(c=>resolverArea(c.demanda)===af);
+  if(pf){const corte=new Date();corte.setDate(corte.getDate()-pf);lista=lista.filter(c=>c.dataFechamento&&new Date(c.dataFechamento)>=corte);}
+  document.getElementById('rel-total-label').textContent=`${lista.length} contratos`;
+  const total=lista.length||1;
+  const sc={};lista.forEach(c=>{const s=c.status||'EM ANDAMENTO';sc[s]=(sc[s]||0)+1;});
+  document.getElementById('rel-kpis').innerHTML=[
+    {label:'Total',valor:lista.length,cor:'text-brand-600',bg:'bg-brand-50'},
+    {label:'Concedidos',valor:sc['CONCEDIDO']||0,cor:'text-green-600',bg:'bg-green-50'},
+    {label:'Protocolados',valor:sc['PROTOCOLADO']||0,cor:'text-amber-600',bg:'bg-amber-50'},
+    {label:'Indeferidos',valor:sc['INDEFERIDO']||0,cor:'text-red-600',bg:'bg-red-50'},
+  ].map(k=>`<div class="bg-white rounded-xl border border-gray-200 px-4 py-3"><p class="text-xs text-gray-400 font-medium">${k.label}</p><p class="text-xl font-bold ${k.cor} mt-0.5">${k.valor}</p><p class="text-[11px] text-gray-400">${Math.round(k.valor/total*100)}%</p></div>`).join('');
+
+  const sL=['EM ANDAMENTO','PROTOCOLADO','CONCEDIDO','INDEFERIDO'];
+  const sC=['#38BDF8','#FCD34D','#4ADE80','#F87171'];
+  if(chartStatus)chartStatus.destroy();
+  chartStatus=new Chart(document.getElementById('chart-status'),{type:'doughnut',data:{labels:sL,datasets:[{data:sL.map(s=>sc[s]||0),backgroundColor:sC,borderWidth:2,borderColor:'#F9FAFB'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}}});
+
+  const ac={};lista.forEach(c=>{const a=resolverArea(c.demanda);ac[a]=(ac[a]||0)+1;});
+  const aL=Object.keys(ac).sort();
+  if(chartArea)chartArea.destroy();
+  chartArea=new Chart(document.getElementById('chart-area'),{type:'bar',data:{labels:aL,datasets:[{data:aL.map(a=>ac[a]),backgroundColor:['#818CF8','#34D399','#FB923C','#F472B6'],borderRadius:6,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'#F1F5F9'}},x:{ticks:{font:{size:10}},grid:{display:false}}}}});
+
+  const cc={};lista.forEach(c=>{if(c.closer)cc[c.closer]=(cc[c.closer]||0)+1;});
+  const cL=Object.keys(cc).sort((a,b)=>cc[b]-cc[a]);
+  if(chartCloser)chartCloser.destroy();
+  chartCloser=new Chart(document.getElementById('chart-closer'),{type:'bar',data:{labels:cL,datasets:[{data:cL.map(c=>cc[c]),backgroundColor:'#818CF8',borderRadius:4,borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'#F1F5F9'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+
+  const bc={};lista.forEach(c=>{if(c.demanda)bc[c.demanda]=(bc[c.demanda]||0)+1;});
+  const bTop=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const bMax=bTop[0]?.[1]||1;
+  document.getElementById('rel-beneficios').innerHTML=bTop.map(([n,q])=>`
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-gray-600 w-44 flex-shrink-0 truncate" title="${esc(n)}">${esc(abreviar(n))}</span>
+      <div class="flex-1 bg-gray-200 rounded-full h-2"><div class="bg-brand-500 h-2 rounded-full" style="width:${Math.round(q/bMax*100)}%"></div></div>
+      <span class="text-xs font-semibold text-gray-700 w-6 text-right">${q}</span>
+      <span class="text-xs text-gray-400 w-8 text-right">${Math.round(q/total*100)}%</span>
+    </div>`).join('');
+};
+
+// ══════════════════════════════════════════════════════
+//  BACKUP
+// ══════════════════════════════════════════════════════
+window.fazerBackup=function(){
+  const dados=todosContratos.map(c=>{
+    const {id,...rest}=c;
+    // serializar timestamps
+    const limpo={id,...rest};
+    ['criadoEm','atualizadoEm'].forEach(k=>{if(limpo[k]?.toDate)limpo[k]=limpo[k].toDate().toISOString();});
+    return limpo;
+  });
+  const json=JSON.stringify(dados,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`backup-contratos-${hoje()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  registrarAudit('BACKUP',`Backup de ${dados.length} contratos exportado`);
+  mostrarToast(`Backup de ${dados.length} contratos exportado!`,'success');
+};
+
+// ══════════════════════════════════════════════════════
+//  IMPRESSÃO / PDF
+// ══════════════════════════════════════════════════════
+window.imprimirLista=function(){
+  const area=document.getElementById('print-area');
+  area.classList.remove('hidden');
+  area.innerHTML=`
+    <style>
+      body{font-family:Inter,sans-serif;font-size:12px}
+      table{width:100%;border-collapse:collapse}
+      th,td{border:1px solid #e5e7eb;padding:6px 8px;text-align:left}
+      th{background:#f9fafb;font-weight:600;font-size:11px;text-transform:uppercase}
+      h1{font-size:16px;font-weight:700;margin-bottom:4px}
+      p.sub{font-size:11px;color:#6b7280;margin-bottom:12px}
+    </style>
+    <h1>Costa Galvão Advocacia — Contratos Fechados</h1>
+    <p class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR')} · ${listaAtual.length} contratos</p>
+    <table>
+      <thead><tr><th>Cliente</th><th>Telefone</th><th>Fechamento</th><th>Benefício</th><th>Closer</th><th>Local</th><th>Status</th><th>Protocolo</th></tr></thead>
+      <tbody>
+        ${listaAtual.map(c=>`<tr>
+          <td>${esc(c.nomeCliente)}${c.menor?' (Menor)':''}</td>
+          <td>${esc(c.telefone||'—')}${c.telefone2?' / '+esc(c.telefone2):''}</td>
+          <td>${formatarData(c.dataFechamento)}</td>
+          <td>${esc(c.demanda||'—')}</td>
+          <td>${esc(c.closer||'—')}</td>
+          <td>${esc(c.local||'—')}</td>
+          <td>${esc(c.status||'EM ANDAMENTO')}</td>
+          <td>${esc(c.protocolo||'—')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  window.print();
+  setTimeout(()=>{area.classList.add('hidden');area.innerHTML='';},1000);
+};
+
+window.imprimirDetalhe=function(){
+  const c=todosContratos.find(x=>x.id===detalheId);if(!c)return;
+  const area=document.getElementById('print-area');
+  area.classList.remove('hidden');
+  area.innerHTML=`
+    <style>body{font-family:Inter,sans-serif;font-size:13px}h1{font-size:16px;font-weight:700;margin-bottom:4px}.row{display:flex;gap:12px;margin-bottom:8px;border-bottom:1px solid #f3f4f6;padding-bottom:8px}.label{color:#6b7280;width:160px;flex-shrink:0}.obs{background:#f9fafb;padding:10px;border-radius:6px;margin-top:8px;white-space:pre-wrap}</style>
+    <h1>Contrato — ${esc(c.nomeCliente)}</h1>
+    <p style="color:#6b7280;font-size:11px;margin-bottom:16px">Costa Galvão Advocacia · Impresso em ${new Date().toLocaleDateString('pt-BR')}</p>
+    ${c.menor?`<div style="background:#fffbeb;border:1px solid #fde68a;padding:10px;border-radius:6px;margin-bottom:12px"><b>Menor de Idade</b><br>Responsável: ${esc(c.respNome)} (${esc(c.respParentesco)}) — CPF: ${esc(c.respCPF)}</div>`:''}
+    <div class="row"><span class="label">Telefone 1</span><span>${esc(c.telefone||'—')}</span></div>
+    ${c.telefone2?`<div class="row"><span class="label">Telefone 2</span><span>${esc(c.telefone2)}</span></div>`:''}
+    <div class="row"><span class="label">Fechamento</span><span>${formatarData(c.dataFechamento)}</span></div>
+    <div class="row"><span class="label">Closer</span><span>${esc(c.closer||'—')}</span></div>
+    <div class="row"><span class="label">Área</span><span>${esc(c.categoria||resolverArea(c.demanda))}</span></div>
+    <div class="row"><span class="label">Benefício</span><span>${esc(c.demanda||'—')}</span></div>
+    <div class="row"><span class="label">Local</span><span>${esc(c.local||'—')}</span></div>
+    <div class="row"><span class="label">Status</span><span>${esc(c.status||'EM ANDAMENTO')}</span></div>
+    <div class="row"><span class="label">Protocolo / Nº</span><span>${esc(c.protocolo||'—')}</span></div>
+    ${c.observacoes?`<div class="obs"><b>Observações:</b><br>${esc(c.observacoes)}</div>`:''}
+    <p style="font-size:10px;color:#9ca3af;margin-top:16px">Criado por ${esc(c.criadoPor||'—')} em ${formatarDataHora(c.criadoEm)} · Editado por ${esc(c.editadoPor||'—')} em ${formatarDataHora(c.atualizadoEm)}</p>`;
+  window.print();
+  setTimeout(()=>{area.classList.add('hidden');area.innerHTML='';},1000);
+};
+
+window.imprimirRelatorio=function(){
+  const corpo=document.getElementById('relatorio-corpo');
+  const area=document.getElementById('print-area');
+  area.classList.remove('hidden');
+  area.innerHTML=`<style>body{font-family:Inter,sans-serif}h1{font-size:16px;font-weight:700}</style><h1>Relatório de Contratos — Costa Galvão</h1><p style="color:#6b7280;font-size:11px;margin-bottom:16px">Gerado em ${new Date().toLocaleDateString('pt-BR')}</p>${corpo.innerHTML}`;
+  window.print();
+  setTimeout(()=>{area.classList.add('hidden');area.innerHTML='';},1500);
+};
+
+// ══════════════════════════════════════════════════════
+//  EQUIPE
+// ══════════════════════════════════════════════════════
+window.abrirEquipe    =()=>{document.getElementById('modal-equipe').classList.remove('hidden');document.body.style.overflow='hidden';};
+window.fecharEquipe   =()=>{document.getElementById('modal-equipe').classList.add('hidden');document.body.style.overflow='';};
+window.fecharEquipeFora=e=>{if(e.target===document.getElementById('modal-equipe'))fecharEquipe();};
+
+function renderizarEquipeLista(){
+  const lista=document.getElementById('equipe-lista');if(!lista)return;
+  if(!equipe.length){lista.innerHTML='<p class="text-sm text-gray-400 text-center py-4">Nenhum colaborador.</p>';return;}
+  lista.innerHTML=equipe.map(e=>{
+    const ativo=e.ativo!==false;
+    return`<div class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-gray-100 ${ativo?'bg-white':'bg-gray-50 opacity-60'}">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${ativo?'bg-brand-100 text-brand-700':'bg-gray-200 text-gray-500'}">${esc(e.nome.charAt(0).toUpperCase())}</div>
+        <div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">${esc(e.nome)}</p><p class="text-[11px] ${ativo?'text-green-600':'text-gray-400'}">${ativo?'Ativo':'Inativo'}${e.admin?' · Admin':''}</p></div>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button onclick="editarSenha('${e.id}','${esc(e.nome)}')" title="Alterar senha" class="p-1.5 rounded-lg text-gray-400 hover:text-brand-600 hover:bg-brand-50"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></button>
+        <button onclick="toggleAtivo('${e.id}',${!ativo})" class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100">${ativo?`<svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`:`<svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`}</button>
+        <button onclick="excluirColaborador('${e.id}','${esc(e.nome)}')" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.adicionarColaborador=async function(){
   const nome=document.getElementById('equipe-novo-nome').value.trim();
   const senha=document.getElementById('equipe-nova-senha').value.trim();
   const admin=document.getElementById('equipe-novo-admin').checked;
@@ -1183,27 +1337,26 @@ window.adicionarColaborador = async function() {
   if(equipe.some(e=>e.nome.toLowerCase()===nome.toLowerCase())){mostrarToast('Nome já existe.','error');return;}
   try{
     await addDoc(collection(db,COL_EQUIPE),{nome,senha,admin,ativo:true,criadoEm:serverTimestamp()});
+    await registrarAudit('CADASTROU',`Novo colaborador: ${nome}`);
     document.getElementById('equipe-novo-nome').value='';
     document.getElementById('equipe-nova-senha').value='';
     document.getElementById('equipe-novo-admin').checked=false;
     mostrarToast(`${nome} adicionado(a)!`,'success');
-  }catch(err){mostrarToast('Erro.','error');}
+  }catch{mostrarToast('Erro.','error');}
 };
 
-window.editarSenha = async function(id,nome) {
+window.editarSenha=async function(id,nome){
   const nova=prompt(`Nova senha para ${nome}:`);
-  if(!nova||!nova.trim()) return;
+  if(!nova||!nova.trim())return;
   try{await updateDoc(doc(db,COL_EQUIPE,id),{senha:nova.trim()});mostrarToast('Senha atualizada.','success');}
   catch{mostrarToast('Erro.','error');}
 };
-
-window.toggleAtivo = async function(id,v) {
+window.toggleAtivo=async function(id,v){
   try{await updateDoc(doc(db,COL_EQUIPE,id),{ativo:v});mostrarToast(v?'Reativado.':'Desativado.','info');}
   catch{mostrarToast('Erro.','error');}
 };
-
-window.excluirColaborador = async function(id,nome) {
-  if(!confirm(`Excluir "${nome}"?`)) return;
+window.excluirColaborador=async function(id,nome){
+  if(!confirm(`Excluir "${nome}"?`))return;
   try{await deleteDoc(doc(db,COL_EQUIPE,id));mostrarToast(`${nome} removido(a).`,'info');}
   catch{mostrarToast('Erro.','error');}
 };
@@ -1211,7 +1364,7 @@ window.excluirColaborador = async function(id,nome) {
 // ══════════════════════════════════════════════════════
 //  UTILITÁRIOS
 // ══════════════════════════════════════════════════════
-window.calcularTempo = function() {
+window.calcularTempo=function(){
   const d1=document.getElementById('f-data-fechamento').value;
   const d2=document.getElementById('f-data-contrato').value;
   const r=calcularTempoDias(d1,d2);
@@ -1219,73 +1372,17 @@ window.calcularTempo = function() {
 };
 function calcularTempoDias(d1,d2){if(!d1||!d2)return'';const diff=Math.round((new Date(d2)-new Date(d1))/86400000);return isNaN(diff)?'':diff;}
 window.mascaraTel=function(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>=11)v=v.replace(/^(\d{2})(\d{1})(\d{4})(\d{4})$/,'($1) $2 $3-$4');else if(v.length>6)v=v.replace(/^(\d{2})(\d{4,5})(\d{0,4})$/,'($1) $2-$3');else if(v.length>2)v=v.replace(/^(\d{2})(\d{0,5})$/,'($1) $2');el.value=v;};
+window.mascaraCPF=function(el){let v=el.value.replace(/\D/g,'').slice(0,11);if(v.length>9)v=v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})$/,'$1.$2.$3-$4');else if(v.length>6)v=v.replace(/^(\d{3})(\d{3})(\d{0,3})$/,'$1.$2.$3');else if(v.length>3)v=v.replace(/^(\d{3})(\d{0,3})$/,'$1.$2');el.value=v;};
 function formatarData(str){if(!str)return'—';const[y,m,d]=str.split('-');return(!y||!m||!d)?str:`${d}/${m}/${y}`;}
 function formatarDataHora(ts){if(!ts)return'—';try{const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch{return'—';}}
 function hoje(){return new Date().toISOString().split('T')[0];}
 function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
-function abreviar(v){
-  if(!v) return '—';
-  const m={
-    'SALÁRIO MATERNIDADE':'SAL. MATERNIDADE',
-    'BPC LOAS':'BPC LOAS',
-    'AUXÍLIO DOENÇA':'AUX. DOENÇA',
-    'APOSENTADORIA POR INVALIDEZ':'APOS. INVALIDEZ',
-    'APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO':'APOS. TEMPO',
-    'APOSENTADORIA ESPECIAL':'APOS. ESPECIAL',
-    'APOSENTADORIA RURAL':'APOS. RURAL',
-    'APOSENTADORIA POR IDADE':'APOS. IDADE',
-    'PENSÃO POR MORTE':'PENSÃO MORTE',
-    'AUXÍLIO-ACIDENTE':'AUX. ACIDENTE',
-    'AUXÍLIO RECLUSÃO':'AUX. RECLUSÃO',
-    'MANDADO DE SEGURANÇA':'MS',
-    'REVISÃO DE BENEFÍCIO':'REV. BENEFÍCIO',
-    'REVISÃO CONTRATO BANCÁRIO':'REV. CONTRATO',
-    'REVISÃO EMPRÉSTIMO CONSIGNADO':'REV. CONSIG.',
-    'NEGATIVAÇÃO INDEVIDA':'NEG. INDEVIDA',
-    'CONTRATAÇÃO INDEVIDA DE SEGURO':'SEG. INDEVIDO',
-    'REVERTER JUSTA CAUSA':'JUSTA CAUSA',
-    'ACIDENTE DE TRABALHO':'ACID. TRABALHO',
-  };
-  return m[v]||v;
-}
-
-function badgeLocal(v){
-  if(!v)return'<span class="text-xs text-gray-400">—</span>';
-  const cfg={'INSS':'bg-blue-50 text-blue-700 border-blue-200','JUSTIÇA':'bg-violet-50 text-violet-700 border-violet-200'};
-  return`<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cfg[v]||'bg-gray-100 text-gray-600 border-gray-200'}">${esc(v)}</span>`;
-}
-
-function badgeStatus(v){
-  const s=v||'EM ANDAMENTO';
-  const cfg={
-    'EM ANDAMENTO': {cls:'bg-sky-50 text-sky-700 border-sky-200',   dot:'bg-sky-500',  pulse:true},
-    'PROTOCOLADO':  {cls:'bg-amber-50 text-amber-700 border-amber-200', dot:'bg-amber-400'},
-    'CONCEDIDO':    {cls:'bg-green-50 text-green-700 border-green-200', dot:'bg-green-500'},
-    'INDEFERIDO':   {cls:'bg-red-50 text-red-700 border-red-200',       dot:'bg-red-400'},
-  };
-  const c=cfg[s]||{cls:'bg-gray-100 text-gray-600 border-gray-200',dot:'bg-gray-400'};
-  return`<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${c.cls}"><span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}${c.pulse?' dot-pulse':''}"></span>${esc(s)}</span>`;
-}
-
-function mostrarToast(msg,tipo='info'){
-  const bg={success:'bg-green-600',error:'bg-red-600',info:'bg-gray-700'}[tipo]||'bg-gray-700';
-  const el=document.createElement('div');
-  el.className=`toast-in pointer-events-auto ${bg} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg max-w-xs`;
-  el.textContent=msg;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(()=>{el.classList.replace('toast-in','toast-out');setTimeout(()=>el.remove(),350);},3500);
-}
-
-function atualizarConexao(ok){
-  const badge=document.getElementById('conn-badge');
-  const dot=document.getElementById('conn-dot');
-  badge.classList.remove('hidden');badge.classList.add('flex');
-  badge.className=badge.className.replace(/bg-\S+/g,'')+(ok?' bg-green-50 text-green-700':' bg-red-50 text-red-700');
-  dot.className='w-1.5 h-1.5 rounded-full '+(ok?'bg-green-500':'bg-red-500');
-  document.getElementById('conn-text').textContent=ok?'Ao vivo':'Offline';
-}
+function abreviar(v){if(!v)return'—';const m={'SALÁRIO MATERNIDADE':'SAL. MATERNIDADE','BPC LOAS':'BPC LOAS','AUXÍLIO DOENÇA':'AUX. DOENÇA','APOSENTADORIA POR INVALIDEZ':'APOS. INVALIDEZ','APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO':'APOS. TEMPO','APOSENTADORIA ESPECIAL':'APOS. ESPECIAL','APOSENTADORIA RURAL':'APOS. RURAL','APOSENTADORIA POR IDADE':'APOS. IDADE','PENSÃO POR MORTE':'PENSÃO MORTE','AUXÍLIO-ACIDENTE':'AUX. ACIDENTE','AUXÍLIO RECLUSÃO':'AUX. RECLUSÃO','MANDADO DE SEGURANÇA':'MS','REVISÃO DE BENEFÍCIO':'REV. BENEFÍCIO','REVISÃO CONTRATO BANCÁRIO':'REV. CONTRATO','REVISÃO EMPRÉSTIMO CONSIGNADO':'REV. CONSIG.','NEGATIVAÇÃO INDEVIDA':'NEG. INDEVIDA','REVERTER JUSTA CAUSA':'JUSTA CAUSA','ACIDENTE DE TRABALHO':'ACID. TRABALHO'};return m[v]||v;}
+function badgeLocal(v){if(!v)return'<span class="text-xs text-gray-400">—</span>';const cfg={'INSS':'bg-blue-50 text-blue-700 border-blue-200','JUSTIÇA':'bg-violet-50 text-violet-700 border-violet-200'};return`<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cfg[v]||'bg-gray-100 text-gray-600 border-gray-200'}">${esc(v)}</span>`;}
+function badgeStatus(v){const s=v||'EM ANDAMENTO';const cfg={'EM ANDAMENTO':{cls:'bg-sky-50 text-sky-700 border-sky-200',dot:'bg-sky-500',pulse:true},'PROTOCOLADO':{cls:'bg-amber-50 text-amber-700 border-amber-200',dot:'bg-amber-400'},'CONCEDIDO':{cls:'bg-green-50 text-green-700 border-green-200',dot:'bg-green-500'},'INDEFERIDO':{cls:'bg-red-50 text-red-700 border-red-200',dot:'bg-red-400'}};const c=cfg[s]||{cls:'bg-gray-100 text-gray-600 border-gray-200',dot:'bg-gray-400'};return`<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${c.cls}"><span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}${c.pulse?' dot-pulse':''}"></span>${esc(s)}</span>`;}
+function mostrarToast(msg,tipo='info'){const bg={success:'bg-green-600',error:'bg-red-600',info:'bg-gray-700'}[tipo]||'bg-gray-700';const el=document.createElement('div');el.className=`toast-in pointer-events-auto ${bg} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg max-w-xs`;el.textContent=msg;document.getElementById('toast-container').appendChild(el);setTimeout(()=>{el.classList.replace('toast-in','toast-out');setTimeout(()=>el.remove(),350);},3500);}
+function atualizarConexao(ok){const badge=document.getElementById('conn-badge');const dot=document.getElementById('conn-dot');badge.classList.remove('hidden');badge.classList.add('flex');badge.className=badge.className.replace(/bg-\S+/g,'')+(ok?' bg-green-50 text-green-700':' bg-red-50 text-red-700');dot.className='w-1.5 h-1.5 rounded-full '+(ok?'bg-green-500':'bg-red-500');document.getElementById('conn-text').textContent=ok?'Ao vivo':'Offline';}
 </script>
 </body>
 </html>
