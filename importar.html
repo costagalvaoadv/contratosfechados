@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Importar Contratos · Costa Galvão</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#F8FAFC;color:#1e293b;padding:2rem}
+    h1{font-size:1.25rem;font-weight:600;margin-bottom:.25rem}
+    p.sub{font-size:.875rem;color:#64748b;margin-bottom:2rem}
+    .card{background:#fff;border:1px solid #E2E8F0;border-radius:1rem;padding:1.5rem;max-width:640px;margin:0 auto}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;background:#4F46E5;color:#fff;font-size:.875rem;font-weight:500;padding:.625rem 1.25rem;border:none;border-radius:.5rem;cursor:pointer;transition:background .15s}
+    .btn:hover{background:#4338CA}
+    .btn:disabled{background:#A5B4FC;cursor:not-allowed}
+    .log{margin-top:1.5rem;background:#F1F5F9;border-radius:.5rem;padding:1rem;font-size:.75rem;font-family:monospace;max-height:400px;overflow-y:auto;line-height:1.8}
+    .ok{color:#16a34a}.er{color:#dc2626}.in{color:#64748b}
+    .progress{margin-top:1rem;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden}
+    .progress-bar{height:100%;background:#4F46E5;border-radius:99px;transition:width .3s;width:0%}
+    .summary{margin-top:1rem;font-size:.875rem;color:#475569}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Importação de Contratos</h1>
+  <p class="sub">Importa todos os contratos da planilha direto para o Firestore do sistema Costa Galvão.</p>
+
+  <button class="btn" id="btnImportar" onclick="iniciarImportacao()">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+    </svg>
+    Iniciar Importação
+  </button>
+
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <p class="summary" id="summary"></p>
+  <div class="log" id="log" style="display:none"></div>
+</div>
+
+<script type="module">
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, collection, addDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── mesmas credenciais do sistema principal ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyApfgFhFxlLyOSAtDwpPt_FUGMpYQ6qxwI",
+  authDomain:        "contratos-fechados.firebaseapp.com",
+  projectId:         "contratos-fechados",
+  storageBucket:     "contratos-fechados.firebasestorage.app",
+  messagingSenderId: "715425128767",
+  appId:             "1:715425128767:web:b0bbe883e13fa1f94df38a"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Converte dd/mm/aaaa → yyyy-mm-dd ──
+function toISO(str) {
+  if (!str || !str.trim()) return '';
+  str = str.trim();
+  // já está em ISO
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // dd/mm/aaaa ou d/m/aaaa
+  const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return ''; // não reconhecido (ex: "Agosto")
+}
+
+// ── Normaliza status ──
+function normStatus(s) {
+  if (!s || s.trim() === '--------------' || s.trim() === '') return 'EM ANDAMENTO';
+  return s.trim().toUpperCase();
+}
+
+// ── Normaliza origem ──
+function normOrigem(s) {
+  if (!s) return '';
+  const v = s.trim();
+  if (/facebook/i.test(v)) return 'Tráfego Facebook';
+  if (/instagram/i.test(v)) return 'Instagram Orgânico';
+  if (/jucely/i.test(v))   return 'Indicação Jucely';
+  if (/joelma/i.test(v))   return 'Indicação Joelma';
+  if (/isabel/i.test(v))   return 'Indicação Isabel';
+  if (/indica/i.test(v))   return 'Indicação Cliente';
+  if (/google/i.test(v))   return 'Google Ads';
+  return v;
+}
+
+// ────────────────────────────────────────────────────────
+//  DADOS DA PLANILHA
+//  Cada linha: [dataFechamento, nomeCliente, telefone,
+//               dataContrato, tempoFechamento, previsaoNascimento,
+//               origem, closer, demanda, status, local,
+//               protocolo, observacoes]
+// ────────────────────────────────────────────────────────
+const DADOS = [
+["02/06/2025","CONCEIÇÃO CESÁRIO DA SILVA CAVALCANTI","(87) 98110-6565","02/06/2025","0","","Indicação Jucely","Jucineide","ENTRADA BPC - COLUNA","PROTOCOLADO","INSS","15/07/2025",""],
+["09/06/2025","AGNES ALEXANDRA GUIMARÃES FLORÊNCIO","(22)99788-1090","13/06/2025","4","","Tráfego Facebook","Jucineide","ENTRADA BPC - ANEMIA FALCIFORME","PROTOCOLADO","JUSTIÇA","13/06/2025","Processo nº 5058622-41.2025.4.02.5101 - JFRJ"],
+["12/06/2025","MARIA APARECIDA LOPES RODRIGUES","(31) 8515-4487","13/06/2025","1","","Tráfego Facebook","Jucineide","MANDADO DE SEGURANÇA","EM ANDAMENTO","JUSTIÇA","14/07/2025","Processo nº 6006002-05.2025.4.06.3814 - JFMG"],
+["17/06/2025","ADÃO RAMOS","(55) 98116-7745","17/06/2025","0","","Tráfego Facebook","Denise","ENTRADA BPC - AUTISMO","CONCEDIDO","INSS","26/07/2025",""],
+["25/06/2025","PATRÍCIA DA CONCEIÇÃO","(11) 93032-6112","30/06/2025","5","","Tráfego Facebook","Jucineide","DEMORA NA ANÁLISE","EM ANDAMENTO","INSS","20/08/2025",""],
+["22/07/2025","ELIZABETH DOS SANTOS ALENCAR","(92) 9192-2796","22/07/2025","0","","Tráfego Facebook","Jucineide","DEMORA NA ANÁLISE","CONCEDIDO","INSS","08/08/2025","MS nº 1036587-65.2025.4.01.3200 - 9ª Vara Federal Cível - SJAM"],
+["08/08/2025","EDNA FERREIRA DOS SANTOS","(87) 98133-9528","08/08/2025","0","","Instagram Orgânico","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","JUSTIÇA","19/08/2025","Processo nº 0005258-52.2025.4.05.8305 - 32ª Vara Federal"],
+["12/08/2025","MARIA ERIVALDETE SOUZA","(84) 9983-5734","12/08/2025","0","","Tráfego Facebook","Larissa","ENTRADA BPC - BIPOLARIDADE","CONCEDIDO","INSS","15/08/2025","BPC LIBERADO"],
+["14/08/2025","SPARTACUS PATRICK","27 73 858 1901","14/08/2025","0","","Instagram Orgânico","Jucineide","REVISÃO CONTRATO EMPRÉSTIMO CONSIGNADO","EM ANDAMENTO","JUSTIÇA","",""],
+["06/08/2025","ANTONIO JOSÉ DE SOUZA","(11) 98809-7810","15/08/2025","9","","Tráfego Facebook","Larissa","AUXÍLIO DOENÇA","EM ANDAMENTO","JUSTIÇA","",""],
+["19/08/2025","MIGUEL DA SILVA","(94) 98145-3977","19/08/2025","0","","Tráfego Facebook","Jucineide","REVISÃO CONTRATO EMPRÉSTIMO CONSIGNADO","EM ANDAMENTO","JUSTIÇA","",""],
+["19/08/2025","ANTONIO EDSON RIBEIRO","(98) 98168-7212","25/08/2025","6","","Tráfego Facebook","Jucineide","BPC LOAS","PROTOCOLADO","INSS","03/09/2025",""],
+["02/09/2025","DANIELLA SANTOS DO CARMO","(11) 98581-7818","02/09/2025","0","08/01/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","","Criança nasceu em 23/11/2025. Benefício concedido. Primeira parcela dia 08/01/26"],
+["29/08/2025","BRENDON RODRIGUES","(11) 94395-7708","08/09/2025","10","","Indicação Cliente","Jucineide","REVERTER JUSTA CAUSA","EM ANDAMENTO","JUSTIÇA","",""],
+["03/09/2025","JAQUELINE SILVA AMORIM","(11)94708-0836","10/09/2025","7","04/11/2025","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","","Criança nasceu em 19/09/2025. Benefício liberado em 16/10/2025. 1º pagamento em 04/11/2025"],
+["16/10/2025","JAQUELINE BATISTA DE ALMEIDA","(31) 9324-7091","16/10/2025","0","16/02/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO DE NASCIMENTO 16 DE FEVEREIRO DE 2026"],
+["21/10/2025","THALIA PIRES BARBOSA","(62) 98116-1134","21/10/2025","0","30/04/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","INSS","","DATA PREVISTA PARA O NASCIMENTO DA CRIANÇA 30/04/2026"],
+["22/10/2025","JANDREZA","(87) 99124-3203","22/10/2025","0","","Indicação Cliente","Jucineide","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","19/11/2025",""],
+["22/10/2025","ROZIETE","(64) 99270-6308","22/10/2025","0","","Tráfego Facebook","Jucineide","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","29/10/2025","Benefício não concedido. Judicializado. Em fase inicial."],
+["21/10/2025","MARIA JOELMA CAETANO DA SILVA","(87) 98107-1902","23/10/2025","2","20/03/2026","Indicação Cliente","Ludmilla","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","07/04/2026","DATA PREVISTA 22/03/2026. GUIA DO INSS PAGA 05/02/2026"],
+["24/10/2025","IRIS DANYELA SEABRA MANGUEIRA","(81) 99692-6043","24/10/2025","0","24/02/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","21/01/2026","PREVISÃO DE NASCIMENTO 24/02/2026. Criança já nasceu em janeiro/26."],
+["24/10/2025","MAYARA HONORATO LOPES","(11) 91798-3691","24/10/2025","0","15/03/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","DATA PREVISTA 15/03/2026"],
+["16/09/2025","ANDRESA HILZA DA SILVA","(83) 98864-2207","27/10/2025","41","09/12/2025","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","09/12/2025","Criança nasceu em 2024. Requerimento Administrativo em 09/12."],
+["27/10/2025","STEPHANY CRISTINA LIMA DA SILVA","(11) 96244-7069","27/10/2025","0","05/01/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","30/10/2025","Criança nasceu em 25/09/2025. Benefício liberado em 03/11/2025. Primeiro pagamento em 25/11/2025."],
+["18/10/2025","DIÉSSICA DE JESUS SOUZA","(61) 99436-8047","29/10/2025","11","29/12/2025","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","14/01/2026","Criança nasceu em 05/01/2026."],
+["24/10/2025","VERI DI ANE PEDROSA DE SANTANA","(87) 99627-3709","30/10/2025","6","20/01/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","14/01/2026","Criança nasceu em 07/01/2026."],
+["29/10/2025","KARINA TUPINAMBA DA SILVA","(28) 99907-9241","01/11/2025","3","","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Está no começo da gravidez."],
+["31/10/2025","LAIS SANTOS DE OLIVEIRA","(73) 99107-4481","","","15/05/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","DATA PREVISTA DO NASCIMENTO 01/05/2026"],
+["03/11/2025","ANTONIA MATOS","(94) 99101-7145","04/11/2025","1","","Tráfego Facebook","Jucineide","BPC LOAS","PROTOCOLADO","JUSTIÇA","15/01/2026","Pedido administrativo negado pelo INSS. Judicializado."],
+["04/11/2025","JAQUELINE ARAÚJO DOS SANTOS","(61) 99521-6371","04/11/2025","0","04/06/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO DE NASCIMENTO 04/06/2026"],
+["05/11/2025","VANESSA APARECIDA DE BARROS NUNES","(11) 95236-1903","05/11/2025","0","13/06/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO DE NASCIMENTO 20/04/2026, guia já paga"],
+["05/11/2025","TALITA BATISTA DE OLIVEIRA","(16) 99128-4750","05/11/2025","0","15/08/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","DATA PREVISTA 15/08/2026"],
+["07/11/2025","PAMELA HADJA MARQUES PEIXOTO","(51) 99548-0144","07/11/2025","0","28/02/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","19/03/2026","DATA PREVISTA 28/02/2026"],
+["10/11/2025","MARILIA DE OLIVEIRA JULIO","(12) 99637-5322","10/11/2025","0","11/12/2025","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","09/12/2025","CRIANÇA JÁ NASCEU. Benefício concedido."],
+["01/11/2025","LUANA LAURINDO DA SILVA","(11) 93229-1478","11/11/2025","10","11/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Está no começo da gravidez."],
+["18/11/2025","MICHELLE FERNADES DOS SANTOS","(11) 98533-2085","19/11/2025","1","05/12/2025","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","","Pagou a Guia. Benefício Protocolado."],
+["20/11/2025","ARIANE MARCELA DE AZEVEDO","(35) 99755-7838","20/11/2025","0","11/02/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","INSS","","PREVISÃO DE NASCIMENTO 11/02/2026"],
+["24/11/2025","THALIA RAMOS PEREIRA DA SILVA","(44) 99864-7452","24/11/2025","0","24/06/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO DE NASCIMENTO 24/07/2026"],
+["25/11/2025","SANDRA MARIA DA SILVA","(51) 99474-2746","25/11/2025","0","15/05/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO DE NASCIMENTO 01/05/2026"],
+["04/11/2025","ALESSANDRA DA SILVA GALVÃO","(81) 99113-1724","27/11/2025","23","","Indicação Joelma","Isabel","BPC LOAS","PROTOCOLADO","INSS","14/01/2026",""],
+["17/11/2025","JANETE CASTURINA MÃE DE PEDRO MIGUEL","(41) 99575-8779","27/11/2025","10","","Tráfego Facebook","Lauana","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","","JANETE TROCOU DE NÚMERO, NÚMERO ANTIGO (41) 99838-9019"],
+["26/11/2025","LARA DOS SANTOS DANTAS","(55) 99938-8825","27/11/2025","1","15/04/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO 15/04/2026"],
+["28/11/2025","ANDRIELI LOBATO FIRMINO","(28) 99978-5784","28/11/2025","0","","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Criança já nasceu. Mãe trabalhou de carteira assinada."],
+["28/11/2025","BRENA DARLING PAIVA DE ANDRADE","(96) 98142-4299","01/12/2025","3","10/12/2025","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","12/12/2025","Criança nasceu em 30/12/2024. Requerimento em 10/12."],
+["01/12/2025","ELIANO MENDES DA SILVA","(87) 98128-4039","01/12/2025","0","","Indicação Cliente","Ludmilla","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","12/12/2025",""],
+["14/11/2025","PAMELA APARECIDA DE SOUZA","(15) 99846-8265","02/12/2025","18","15/03/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","DATA PREVISTA 01/03/2026"],
+["27/11/2025","MARIA CLARA SILVA DE VASCONCELOS","(82) 98106-2198","02/12/2025","5","15/04/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","11/03/2026","DATA PREVISTA 12/03/2026. NASCEU EM 22/03/2026."],
+["01/12/2025","JULIANA LOPES BARBOSA DE SOUZA","(81) 98701-8677","02/12/2025","1","05/07/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","","DATA DA PREVISÃO 05/07/2026"],
+["05/12/2025","RITA DE CÁSSIA MEDEIROS RIBEIRO PANTA","(87) 999653437","05/12/2025","0","05/04/2026","Indicação Cliente","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","PREVISÃO 05/04/2026"],
+["05/12/2025","WANESSA KAROLINE NOGUEIRA RIBEIRO","(12) 99121-0114","05/12/2025","0","05/08/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","","No começo da gravidez."],
+["05/12/2025","MARIA SUELENE DA SILVA PEREIRA","(87) 98152-0095","05/12/2025","0","","Indicação Isabel","Isabel","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","12/12/2025",""],
+["08/12/2025","ELIZABETH CARVALHO BUENO","(11) 95728-4495","08/12/2025","0","01/05/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","29/04/2026",""],
+["08/12/2025","ROSIMEIRE VITALINO SILVA","(87) 99124-3204","08/12/2025","0","","Indicação Cliente","Jucineide","AUXÍLIO DOENÇA","PROTOCOLADO","INSS","19/12/2025",""],
+["15/10/2025","DAIRA SOUTO","(51) 99411-5253","09/12/2025","55","20/03/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["08/12/2025","GILEUZA FERREIRA DA SILVA","(87) 98154-5117","09/12/2025","1","","Indicação Cliente","Ludmilla","NEGATIVAÇÃO INDEVIDA","PROTOCOLADO","JUSTIÇA","",""],
+["08/12/2025","LEONARDO DE AQUINO BARROS","(87) 99124-3203","09/12/2025","1","","Indicação Cliente","Jucineide","APOSENTADORIA POR INVALIDEZ","PROTOCOLADO","INSS","12/01/2026",""],
+["05/12/2025","ALINE JAVORSKI CLEMENTINO AMARÕES","(66) 99934-8157","10/12/2025","5","01/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["10/12/2025","ANTÔNIO CARLOS DE ARAÚJO","(87) 98122-9534","10/12/2025","0","","Indicação Cliente","Jucineide","AUXÍLIO DOENÇA","EM ANDAMENTO","","",""],
+["11/12/2025","ANA CARLA FEITOSA DA SILVA","(87) 99925-3308","11/12/2025","0","01/02/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","10/02/2026","Indicação Moabi"],
+["07/12/2025","GRACE KELLY DOS SANTOS VIANA","(11) 99806-5244","12/12/2025","5","01/03/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","",""],
+["11/12/2025","CICERA MARIA DE OLIVEIRA XAVIER","(87) 99809-8124","12/12/2025","1","20/01/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","23/12/2025",""],
+["13/12/2025","CAUANE ASHLEY MONTEIRO SILVA SALES","(11) 95273-8784","15/12/2025","2","01/05/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["13/12/2025","MARIA JULIANA DAS NEVES DOS SANTOS","(11) 91292-4652","15/12/2025","2","","Tráfego Facebook","Ludmilla","BPC LOAS","PROTOCOLADO","INSS","14/01/2026","CRIANÇA TEM TOD"],
+["30/10/2025","LUANA MARIA DA SILVA","(17) 99197-1379","17/12/2025","48","04/05/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["18/12/2025","CAROLAINE EVILE DE MOURA LEAL","(87) 99988-4790","19/12/2025","1","08/07/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Início da gravidez, 5 semanas e 3 dias."],
+["01/12/2025","LEILIANE CHAVES PARMEZANI","(27) 99768-1441","29/12/2025","28","","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","14/01/2026","Criança já nasceu. Novo requerimento em 01/04/2026."],
+["26/12/2025","JULIANA MARTINS DE PAIVA","(24) 99985-7305","29/12/2025","3","01/04/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","10/04/2026",""],
+["30/12/2025","ANDREZA LOPES PEREIRA","(12) 99183-5776","02/01/2026","3","06/05/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["27/12/2025","ROSEMARY DOS SANTOS FERREIRA","(32) 99126-8374","03/01/2026","7","","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","05/02/2026","Certidão de nascimento pouco legível."],
+["03/01/2026","EDNA COUTINHO SALES","(65) 99280-2734","03/01/2026","0","07/03/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","","",""],
+["11/01/2026","LUIZA FERREIRA ILHONGUES","(53) 98100-7972","12/01/2026","1","","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","06/02/2026","Criança já nasceu."],
+["30/10/2025","TAYNARA KELLY DA SILVA","(81) 99892-1210","15/01/2026","77","","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","05/02/2026","Criança nasceu em 27/01/26."],
+["21/11/2025","GISELE DA SILVA NASCIMENTO","(13) 99701-9434","16/01/2026","56","01/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRAVIDEZ GEMELAR, 3 meses."],
+["02/01/2026","ÉRICA MENEZES DOS SANTOS","(73) 98134-2517","19/01/2026","17","01/04/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["17/01/2026","VITORIA LARISSA PEDRO DA SILVA","(82) 99148-2919","19/01/2026","2","15/07/2026","Indicação Cliente","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","",""],
+["19/01/2026","DAYANNE CORREIA","(82) 99326-5845","19/01/2026","0","10/09/2026","Indicação Cliente","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","10/09/2026",""],
+["21/01/2026","SUELI APARECIDA BATISTA","(11) 98110-4479","22/01/2026","1","","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","10/02/2026",""],
+["22/01/2026","CAIO LUCAS DA SILVA HENRIQUE","(81) 98427-4425","22/01/2026","0","","Tráfego Facebook","Isabel","AUXÍLIO-ACIDENTE","EM ANDAMENTO","","",""],
+["20/01/2026","PALOMA FRAZÃO DA SILVA","(87) 98178-3556","22/01/2026","2","03/06/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRÁVIDA DE 5 MESES"],
+["17/12/2025","TAINARA REBECA DE SOUZA ANACLETO MAIA","(31) 99139-9429","21/01/2026","35","22/05/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRÁVIDA DE 6 MESES"],
+["03/01/2026","EMILLY GABRIELE DE OLIVEIRA LOPES","(37) 99196-0123","22/01/2026","19","27/03/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["26/01/2026","ANDRÉIA RODRIGUES","(14) 99149-6325","26/01/2026","0","","Tráfego Facebook","Leticia","BPC LOAS","PROTOCOLADO","INSS","05/02/2026","Avaliação social: 02/04/2026, 08h10."],
+["14/01/2026","MARÍLIA DE OLIVEIRA JULIO","(12) 99637-5322","14/01/2026","0","","Tráfego Facebook","Leticia","SALÁRIO MATERNIDADE","PROTOCOLADO","","","Criança já nascida."],
+["14/01/2026","TAMILIS COSME DOS SANTOS","(84) 99690-6371","27/01/2026","13","","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRÁVIDA DE 3 MESES"],
+["23/01/2026","NAELY CLEMENTE LOPES","(87) 98151-3764","28/01/2026","5","12/06/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRÁVIDA DE 5 MESES"],
+["28/01/2026","MARIA MÔNICA CHAVES DE ARAUJO","(87) 98132-2472","28/01/2026","0","24/03/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","23/03/2026","GRÁVIDA DE 7 MESES"],
+["28/01/2026","VITÓRIA EVELLYN DA COSTA DUARTE","(21) 97733-1662","29/01/2026","1","29/07/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","GRÁVIDA DE 3 MESES"],
+["19/12/2025","LYLIAN BARBOSA DE OLIVEIRA GOMES","(87) 98877-9642","30/01/2026","42","","Indicação Isabel","Isabel","BPC LOAS","PROTOCOLADO","INSS","29/04/2026","Avaliação social: 30/03/26. Perícia médica: 24/03/26."],
+["27/01/2026","THAIS SIQUEIRA NASCIMBENE","(33) 98459-9797","30/01/2026","3","23/01/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","CONCEDIDO","INSS","05/02/2026","CONCEDIDO EM 20/02/2026"],
+["29/11/2025","JANETE SILVA DIAS","(67) 99334-1759","29/01/2026","61","","Tráfego Facebook","Ludmilla","BPC LOAS","PROTOCOLADO","INSS","05/02/2026","Avaliação social: 17/03/26. Perícia médica: 10/03/2026."],
+["30/01/2026","ALESSANDRA NUNES","(46) 98827-3677","31/01/2026","1","","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["01/02/2026","MARIA JOSÉ DA SILVA","(81) 99308-3227","01/02/2026","0","01/11/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["02/02/2026","CYNTIA JAQUELINE OLIVEIRA FERREIRA","(87) 99153-0318","04/02/2026","2","","Tráfego Facebook","Ludmilla","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","25/02/2026","Assinatura pelo Tramita. (MANOEL ARTHUR)"],
+["24/01/2026","MARIVANI GOULART","(55) 99946-1523","02/02/2026","9","","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","20/02/2026",""],
+["02/02/2026","TAMIRES DA COSTA MARTINS","(19) 99146-0624","02/02/2026","0","13/05/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","22/05/2026",""],
+["31/01/2026","MARCELA FRANCIELINA","(61) 99404-1604","09/02/2026","9","15/02/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","PROTOCOLADO","INSS","09/03/2026",""],
+["29/01/2026","CLEIDE VILAÇO MÃE DE TIAGO DA SILVA","(92) 98608-3287","10/02/2026","12","","Tráfego Facebook","Lauana","BPC LOAS PARA O FILHO","PROTOCOLADO","INSS","25/02/2026","Novo protocolo em 01/04/26. Novo protocolo em 22/05/26."],
+["09/02/2026","LENILMA RAMOS BANDEIRA","(24) 99852-8563","10/02/2026","1","","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","05/06/2026","GRÁVIDA DE 5 MESES"],
+["12/02/2026","HELENICE SILVA ALMEIDA","(21) 99004-3914","12/02/2026","0","","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["10/02/2026","VANESSA APARECIDA DA ROCHA","(11) 91930-8668","14/02/2026","4","","Tráfego Facebook","Leticia","SALÁRIO MATERNIDADE","EM ANDAMENTO","","","Previsão de nascimento em junho."],
+["13/02/2026","ILZA FERREIRA DA SILVA","(69) 99323-0381","20/02/2026","7","","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Vai começar o pré-natal."],
+["06/12/2025","VANESSA NADIA MONGOLD","(49) 99192-5669","26/02/2026","82","01/06/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["16/11/2025","JANE CÉLIA REQUIÃO STAIBANO DE SOUZA","(19) 99305-2772","27/02/2026","103","","Tráfego Facebook","Joelma","BPC LOAS","EM ANDAMENTO","","",""],
+["13/02/2026","IASMYN VITÓRIA SOARES PINHEIRO","(11) 97710-8192","27/02/2026","14","","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","INSS","","Criança nasceu em 26/02/2026."],
+["02/03/2026","ALUAN CONCEIÇÃO DA SILVA","(73) 98227-7469","02/03/2026","0","","Tráfego Facebook","Joelma","BPC LOAS","EM ANDAMENTO","","",""],
+["02/01/2026","KHADJA CHUFFI","(11) 91564-6474","24/02/2026","","06/06/2026","Tráfego Facebook","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["15/01/2026","ANDRESSA DOS SANTOS","(49) 99957-6560","02/03/2026","46","11/05/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Assinatura pelo Tramita."],
+["04/03/2026","BRUNA DOS ANJOS MORAES","(51) 99662-0861","04/03/2026","0","06/08/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Assinatura pelo Tramita."],
+["07/01/2026","MARA CRISTINA DA SILVA DIAS","(41) 99718-8509","04/03/2026","56","11/05/2026","Tráfego Facebook","Ludmilla","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Assinatura pelo Tramita."],
+["14/01/2026","SUELEN DE FÁTIMA MARTINS DE CARVALHO","(47) 98456-0288","09/03/2026","54","24/03/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","INSS","","Assinatura pelo Tramita."],
+["17/03/2026","LARISSA PEREIRA DE LIMA","(71) 98440-6100","18/03/2026","1","27/07/2026","Tráfego Facebook","Lauana","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Assinatura pelo Tramita."],
+["19/12/2025","JOILMA EVANGELISTA DA SILVA","(71) 99210-8478","18/03/2026","89","11/06/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","","Assinatura pelo Tramita."],
+["23/03/2026","EVERALDO SOARES DA SILVA","(87)99941-1103","24/03/2026","1","","Tráfego Facebook","Jucineide","CONTRATAÇÃO INDEVIDA DE SEGURO","EM ANDAMENTO","","",""],
+["16/01/2026","ROSILENE LIMA CABRAL","(68) 99259-7391","31/03/2026","74","28/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","",""],
+["05/04/2026","JOVERLANIA ROCHA DA SILVA","(11) 96776-5085","09/04/2026","4","01/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","INSS","",""],
+["02/02/2026","MAIANE BISPO DOS SANTOS","(71) 98361-5712","23/04/2026","80","20/07/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","GUIA NÃO PAGA","INSS","",""],
+["11/01/2026","LUMA KYSHA IZA CAMACHO BRAGA SILVA","(21) 99672-6861","05/05/2026","114","01/08/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["07/05/2026","LEONARDO BATISTA COSTA","(87) 99193-2981","07/05/2026","0","","Tráfego Facebook","Joelma","ACIDENTE DE TRABALHO","EM ANDAMENTO","","",""],
+["21/05/2026","JHESSICA THAYNAR ASSIS SILVA","(93) 98436-9039","21/05/2026","0","18/05/2026","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["27/05/2026","ANA BEATRIZ RODRIGUES DA SILVA","(77) 98116-5466","28/05/2026","1","","Tráfego Facebook","Joelma","SALÁRIO MATERNIDADE","EM ANDAMENTO","","","Previsão: Agosto"],
+["25/05/2026","ADRIELE DOS SANTOS SALVIATO","(32) 99812-6698","28/05/2026","3","01/08/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["19/05/2026","KATRIELE FERNANDA CHIMIN REZENDE","(41) 99552-8737","08/06/2026","20","12/12/2026","Tráfego Facebook","Isabel","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["09/06/2026","MARIA EDUARDA BARBOSA FIRMINO","(87) 99951-5614","09/06/2026","0","29/12/2026","Indicação Cliente","Jucineide","SALÁRIO MATERNIDADE","EM ANDAMENTO","","",""],
+["08/06/2026","PEDRO AUGUSTO rep. RAWYLLA PATRÍCIA","(87) 99931-8476","08/06/2026","0","","Indicação Isabel","Jucineide","BPC LOAS","NÃO SE APLICA","INSS","",""],
+];
+
+// expõe função globalmente
+window.iniciarImportacao = async function() {
+  const btn  = document.getElementById('btnImportar');
+  const log  = document.getElementById('log');
+  const bar  = document.getElementById('progressBar');
+  const summ = document.getElementById('summary');
+
+  btn.disabled = true;
+  btn.textContent = 'Importando…';
+  log.style.display = 'block';
+  log.innerHTML = '';
+
+  let ok = 0, erros = 0;
+  const total = DADOS.length;
+
+  for (let i = 0; i < total; i++) {
+    const r = DADOS[i];
+    const nome = r[1].trim();
+    if (!nome) continue;
+
+    const dataFechamento = toISO(r[0]);
+    const dataContrato   = toISO(r[3]);
+    const tempo          = r[4] ? parseInt(r[4]) : (calcDias(dataFechamento, dataContrato));
+
+    const doc = {
+      dataFechamento,
+      nomeCliente:        nome,
+      telefone:           r[2].trim(),
+      dataContrato,
+      tempoFechamento:    isNaN(tempo) ? '' : tempo,
+      previsaoNascimento: toISO(r[5]),
+      origem:             normOrigem(r[6]),
+      closer:             r[7].trim(),
+      demanda:            r[8].trim(),
+      status:             normStatus(r[9]),
+      local:              r[10].trim(),
+      protocolo:          r[11].trim(),
+      observacoes:        r[12].trim(),
+      criadoEm:           serverTimestamp(),
+      atualizadoEm:       serverTimestamp(),
+    };
+
+    try {
+      await addDoc(collection(db, 'contratos'), doc);
+      ok++;
+      log.innerHTML += `<span class="ok">✓ ${nome}</span>\n`;
+    } catch(e) {
+      erros++;
+      log.innerHTML += `<span class="er">✗ ERRO em ${nome}: ${e.message}</span>\n`;
+    }
+
+    // atualiza barra
+    bar.style.width = ((i+1)/total*100) + '%';
+    log.scrollTop = log.scrollHeight;
+    summ.textContent = `${i+1} de ${total} processados — ${ok} importados, ${erros} erros`;
+
+    // pequena pausa para não sobrecarregar o Firestore
+    await sleep(120);
+  }
+
+  btn.textContent = '✓ Concluído';
+  summ.textContent = `Importação finalizada! ${ok} contratos importados com sucesso. ${erros > 0 ? erros + ' erros.' : ''}`;
+
+  // importar equipe também
+  await importarEquipe();
+};
+
+async function importarEquipe() {
+  const equipe = ['Jucineide','Isabel','Joelma','Denise','Larissa','Lauana','Leticia'];
+  const logEl  = document.getElementById('log');
+  logEl.innerHTML += '\n<span class="in">── Importando equipe ──</span>\n';
+  for (const nome of equipe) {
+    try {
+      await addDoc(collection(db, 'equipe'), { nome, ativo: true, criadoEm: serverTimestamp() });
+      logEl.innerHTML += `<span class="ok">✓ Equipe: ${nome}</span>\n`;
+    } catch(e) {
+      logEl.innerHTML += `<span class="er">✗ Erro equipe ${nome}: ${e.message}</span>\n`;
+    }
+    await sleep(100);
+  }
+  logEl.innerHTML += '<span class="in">✓ Tudo importado! Pode fechar esta aba.</span>\n';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function calcDias(d1, d2) {
+  if (!d1 || !d2) return '';
+  return Math.round((new Date(d2) - new Date(d1)) / 86400000);
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+</script>
+</body>
+</html>
