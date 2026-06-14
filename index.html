@@ -55,9 +55,10 @@
     .avatar-online::after{content:'';position:absolute;bottom:0;right:0;width:7px;height:7px;background:#22C55E;border-radius:50%;border:1.5px solid #fff}
     /* print */
     @media print{
-      body *{visibility:hidden}
-      #print-area,#print-area *{visibility:visible}
-      #print-area{position:fixed;top:0;left:0;width:100%;padding:2rem;background:#fff}
+      
+      
+      #print-area{display:block!important;position:static!important;width:100%!important;padding:1.5rem;background:#fff}
+      body>*:not(#print-area){display:none!important}
     }
   </style>
 </head>
@@ -227,7 +228,9 @@
     </section>
 
     <!-- FILTROS -->
-    <div class="bg-white rounded-xl border border-gray-200 p-4">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2.5">
+
+      <!-- Linha 1: busca + closer + status + local -->
       <div class="flex flex-wrap gap-2 items-center">
         <div class="relative flex-1 min-w-[200px]">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -248,7 +251,31 @@
         </select>
         <button id="btn-limpar" onclick="limparFiltros()" class="hidden text-xs text-brand-600 hover:underline font-medium px-2">Limpar filtros</button>
       </div>
-      <div class="flex flex-wrap gap-2 items-center mt-2.5 pt-2.5 border-t border-gray-100">
+
+      <!-- Linha 2: Período -->
+      <div class="flex flex-wrap gap-2 items-center pt-2 border-t border-gray-100">
+        <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Período</span>
+        <select id="sel-periodo" onchange="onPeriodoChange()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
+          <option value="">Todo o período</option>
+          <option value="mes_atual">Mês atual</option>
+          <option value="mes_anterior">Mês anterior</option>
+          <option value="90">Últimos 3 meses</option>
+          <option value="180">Últimos 6 meses</option>
+          <option value="365">Último ano</option>
+          <option value="especifico">Data específica…</option>
+        </select>
+        <!-- Seletor de data específica (aparece só quando escolhido) -->
+        <div id="bloco-data-especifica" class="hidden flex items-center gap-2">
+          <input id="sel-data-de" type="date" onchange="aplicarFiltros()"
+            class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-3 bg-gray-50 text-gray-600"/>
+          <span class="text-xs text-gray-400">até</span>
+          <input id="sel-data-ate" type="date" onchange="aplicarFiltros()"
+            class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-3 bg-gray-50 text-gray-600"/>
+        </div>
+      </div>
+
+      <!-- Linha 3: Área + Benefício + Ordenar -->
+      <div class="flex flex-wrap gap-2 items-center pt-2 border-t border-gray-100">
         <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Área</span>
         <select id="sel-categoria" onchange="atualizarBeneficios()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600">
           <option value="">Todas as áreas</option>
@@ -893,6 +920,14 @@ window.aplicarFiltros=function(){
   if(local)   lista=lista.filter(c=>c.local===local);
   if(cat)     lista=lista.filter(c=>resolverArea(c.demanda)===cat);
   if(ben)     lista=lista.filter(c=>c.demanda===ben);
+  // Filtro de período
+  const intervalo=calcularIntervaloPeriodo();
+  if(intervalo) lista=lista.filter(c=>{
+    if(!c.dataFechamento) return false;
+    const d=new Date(c.dataFechamento+'T12:00:00');
+    return d>=intervalo.de && d<=intervalo.ate;
+  });
+
   if(busca)   lista=lista.filter(c=>
     (c.nomeCliente||'').toLowerCase().includes(busca)||
     (c.protocolo||'').toLowerCase().includes(busca)||
@@ -910,8 +945,52 @@ window.aplicarFiltros=function(){
   document.getElementById('btn-limpar')?.classList.toggle('hidden',!temFiltro);
 };
 
+window.onPeriodoChange=function(){
+  const v=document.getElementById('sel-periodo').value;
+  const bloco=document.getElementById('bloco-data-especifica');
+  bloco.classList.toggle('hidden', v!=='especifico');
+  document.getElementById('sel-periodo').classList.toggle('ativo', !!v);
+  if(v!=='especifico') aplicarFiltros();
+};
+
+function calcularIntervaloPeriodo(){
+  const v=document.getElementById('sel-periodo')?.value||'';
+  if(!v) return null;
+  const hoje=new Date(); hoje.setHours(23,59,59,999);
+  if(v==='mes_atual'){
+    const ini=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+    return{de:ini,ate:hoje};
+  }
+  if(v==='mes_anterior'){
+    const ini=new Date(hoje.getFullYear(),hoje.getMonth()-1,1);
+    const fim=new Date(hoje.getFullYear(),hoje.getMonth(),0,23,59,59,999);
+    return{de:ini,ate:fim};
+  }
+  if(v==='especifico'){
+    const de=document.getElementById('sel-data-de')?.value;
+    const ate=document.getElementById('sel-data-ate')?.value;
+    if(!de&&!ate) return null;
+    return{
+      de: de?new Date(de+'T00:00:00'):new Date('2000-01-01'),
+      ate:ate?new Date(ate+'T23:59:59'):new Date('2099-12-31'),
+    };
+  }
+  // dias numéricos: 90, 180, 365
+  const dias=parseInt(v);
+  if(!isNaN(dias)){
+    const ini=new Date(hoje); ini.setDate(ini.getDate()-dias); ini.setHours(0,0,0,0);
+    return{de:ini,ate:hoje};
+  }
+  return null;
+}
+
 window.limparFiltros=()=>{
   document.getElementById('busca').value='';
+  document.getElementById('sel-periodo').selectedIndex=0;
+  document.getElementById('sel-periodo').classList.remove('ativo');
+  document.getElementById('bloco-data-especifica').classList.add('hidden');
+  document.getElementById('sel-data-de').value='';
+  document.getElementById('sel-data-ate').value='';
   ['sel-closer','sel-status','sel-local','sel-categoria','sel-beneficio'].forEach(id=>{
     const el=document.getElementById(id);if(el){el.selectedIndex=0;el.classList.remove('ativo');}
   });
