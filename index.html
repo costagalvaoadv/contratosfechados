@@ -247,7 +247,8 @@
           <div class="grid sm:grid-cols-2 gap-3">
             <div><label class="label-form">Closer / Responsável *</label><select id="f-closer" class="input-form"><option value="">— Selecione —</option></select></div>
             <div><label class="label-form">Área</label><select id="f-categoria" class="input-form" onchange="popularBeneficiosForm()"><option value="">— Selecione —</option><option value="PREVIDENCIÁRIO">Previdenciário</option><option value="CONSUMIDOR">Consumidor</option><option value="BANCÁRIO">Bancário</option><option value="TRABALHISTA">Trabalhista</option><option value="OUTROS">Outros</option></select></div>
-            <div class="sm:col-span-2"><label class="label-form">Benefício / Demanda *</label><select id="f-demanda" class="input-form"><option value="">— Selecione a área primeiro —</option></select><input id="f-demanda-outro" type="text" class="input-form mt-2 hidden" placeholder="Descreva o benefício ou demanda…"/></div>
+            <div class="sm:col-span-2"><label class="label-form">Benefício / Demanda *</label><select id="f-demanda" class="input-form"><option value="">— Selecione a área primeiro —</option></select>
+            <input id="f-demanda-outro" type="text" class="input-form mt-2 hidden" placeholder="Descreva o benefício ou demanda…"/></div>
             <div><label class="label-form">Local</label><select id="f-local" class="input-form"><option value="">— Selecione —</option><option>INSS</option><option>JUSTIÇA</option></select></div>
             <div><label class="label-form">Status</label><select id="f-status" class="input-form"><option value="EM ANDAMENTO">EM ANDAMENTO</option><option value="PROTOCOLADO">PROTOCOLADO</option><option value="CONCEDIDO">CONCEDIDO</option><option value="INDEFERIDO">INDEFERIDO</option><option value="PERDIDO">PERDIDO</option></select></div>
             <div class="sm:col-span-2"><label class="label-form">Protocolo / Nº do Processo</label><input id="f-protocolo" type="text" class="input-form" placeholder="Ex.: 0000127-07.2017.8.17.3230"/></div>
@@ -580,7 +581,24 @@ window.filtrarKPI=function(s){document.querySelectorAll('.kpi-card').forEach(c=>
 window.onPeriodoChange=function(){const v=document.getElementById('sel-periodo').value;document.getElementById('bloco-data-especifica').classList.toggle('hidden',v!=='especifico');document.getElementById('sel-periodo').classList.toggle('ativo',!!v);if(v!=='especifico')aplicarFiltros();};
 function calcularIntervalo(){const v=document.getElementById('sel-periodo')?.value||'';if(!v)return null;const hj=new Date();hj.setHours(23,59,59,999);if(v==='mes_atual')return{de:new Date(hj.getFullYear(),hj.getMonth(),1),ate:hj};if(v==='mes_anterior')return{de:new Date(hj.getFullYear(),hj.getMonth()-1,1),ate:new Date(hj.getFullYear(),hj.getMonth(),0,23,59,59)};if(v==='especifico'){const de=document.getElementById('sel-data-de')?.value,ate=document.getElementById('sel-data-ate')?.value;if(!de&&!ate)return null;return{de:de?new Date(de+'T00:00:00'):new Date('2000-01-01'),ate:ate?new Date(ate+'T23:59:59'):new Date('2099-12-31')};}const dias=parseInt(v);if(!isNaN(dias)){const ini=new Date(hj);ini.setDate(ini.getDate()-dias);ini.setHours(0,0,0,0);return{de:ini,ate:hj};}return null;}
 window.atualizarBeneficios=function(){const cat=document.getElementById('sel-categoria').value,sel=document.getElementById('sel-beneficio');sel.innerHTML='<option value="">Todos os benefícios</option>';if(cat&&BENEFICIOS[cat])BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});document.getElementById('sel-categoria').classList.toggle('ativo',!!cat);aplicarFiltros();};
-window.popularBeneficiosForm=function(){const cat=document.getElementById('f-categoria').value,sel=document.getElementById('f-demanda'),outro=document.getElementById('f-demanda-outro');sel.innerHTML='<option value="">— Selecione —</option>';if(cat==='OUTROS'){sel.innerHTML='<option value="OUTRO">Digitar manualmente abaixo</option>';sel.disabled=true;outro.classList.remove('hidden');outro.required=true;}else{sel.disabled=false;outro.classList.add('hidden');outro.required=false;outro.value='';if(cat&&BENEFICIOS[cat])BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});} };
+window.popularBeneficiosForm=function(){
+  const cat=document.getElementById('f-categoria').value;
+  const sel=document.getElementById('f-demanda');
+  const outro=document.getElementById('f-demanda-outro');
+  sel.innerHTML='<option value="">— Selecione —</option>';
+  if(cat==='OUTROS'){
+    sel.innerHTML='<option value="OUTRO">Digitar manualmente abaixo ↓</option>';
+    sel.disabled=true;
+    outro.classList.remove('hidden');
+    outro.required=true;
+  } else {
+    sel.disabled=false;
+    outro.classList.add('hidden');
+    outro.required=false;
+    outro.value='';
+    if(cat&&BENEFICIOS[cat])BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});
+  }
+};
 window.aplicarFiltros=function(){const busca=document.getElementById('busca')?.value.toLowerCase().trim()||'',closer=document.getElementById('sel-closer')?.value||'',status=document.getElementById('sel-status')?.value||'',local=document.getElementById('sel-local')?.value||'',cat=document.getElementById('sel-categoria')?.value||'',ben=document.getElementById('sel-beneficio')?.value||'',sortBy=document.getElementById('sort-select')?.value||'fechamento_desc',intv=calcularIntervalo();
   ['sel-closer','sel-status','sel-local','sel-beneficio'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('ativo',!!el.value);});
   let lista=[...todosContratos];
@@ -629,7 +647,16 @@ window.calcularParcelas=function(){const val=parseFloat(document.getElementById(
 
 function limparForm(){['f-nome','f-cpf','f-telefone','f-telefone2','f-data-fechamento','f-data-contrato','f-tempo','f-protocolo','f-obs','f-resp-nome','f-resp-cpf','f-entrada-valor','f-entrada-pagas','f-exito-percentual','f-exito-valor','f-inadimplente-valor','f-inadimplente-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});['f-origem','f-closer','f-categoria','f-local','f-resp-parentesco','f-exito-tipo'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});document.getElementById('f-status').value='EM ANDAMENTO';document.getElementById('f-entrada-parcelas').value='1';document.getElementById('f-entrada-status').value='pendente';document.getElementById('f-exito-status').value='aguardando';document.getElementById('f-entrada-parcela-val').value='';document.getElementById('f-demanda').innerHTML='<option value="">— Selecione a área primeiro —</option>';document.getElementById('f-demanda').disabled=false;document.getElementById('f-demanda-outro').classList.add('hidden');document.getElementById('f-demanda-outro').value='';document.getElementById('f-menor').checked=false;document.getElementById('f-inadimplente').checked=false;document.getElementById('bloco-responsavel').classList.add('hidden');document.getElementById('bloco-inadimplencia').classList.add('hidden');document.getElementById('bloco-exito-percentual').classList.add('hidden');document.getElementById('bloco-exito-fixo').classList.add('hidden');document.getElementById('f-cpf-alerta').classList.add('hidden');}
 
-function preencherForm(c){const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};s('f-nome',c.nomeCliente);s('f-cpf',c.cpf);s('f-telefone',c.telefone);s('f-telefone2',c.telefone2);s('f-data-fechamento',c.dataFechamento);s('f-data-contrato',c.dataContrato);s('f-tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'');s('f-origem',c.origem);s('f-closer',c.closer);if(c.categoria==='OUTROS'){document.getElementById('f-demanda').innerHTML='<option value="OUTRO">Digitar manualmente abaixo</option>';document.getElementById('f-demanda').disabled=true;const ot=document.getElementById('f-demanda-outro');ot.classList.remove('hidden');ot.value=c.demanda||'';}else{s('f-demanda',c.demanda);}s('f-local',c.local);s('f-status',c.status||'EM ANDAMENTO');s('f-protocolo',c.protocolo);s('f-obs',c.observacoes);s('f-resp-nome',c.respNome);s('f-resp-parentesco',c.respParentesco);s('f-resp-cpf',c.respCPF);
+function preencherForm(c){const s=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v||'';};s('f-nome',c.nomeCliente);s('f-cpf',c.cpf);s('f-telefone',c.telefone);s('f-telefone2',c.telefone2);s('f-data-fechamento',c.dataFechamento);s('f-data-contrato',c.dataContrato);s('f-tempo',c.tempoFechamento!==''?c.tempoFechamento+' dias':'');s('f-origem',c.origem);s('f-closer',c.closer);if(c.categoria==='OUTROS'){
+    document.getElementById('f-demanda').innerHTML='<option value="OUTRO">Digitar manualmente abaixo ↓</option>';
+    document.getElementById('f-demanda').disabled=true;
+    const ot=document.getElementById('f-demanda-outro');
+    ot.classList.remove('hidden');
+    ot.value=c.demanda||'';
+  } else {
+    s('f-demanda',c.demanda);
+  }
+  s('f-local',c.local);s('f-status',c.status||'EM ANDAMENTO');s('f-protocolo',c.protocolo);s('f-obs',c.observacoes);s('f-resp-nome',c.respNome);s('f-resp-parentesco',c.respParentesco);s('f-resp-cpf',c.respCPF);
   // Financeiro
   if(c.entradaValor){s('f-entrada-valor',c.entradaValor);s('f-entrada-parcelas',c.entradaParcelas||1);s('f-entrada-status',c.entradaStatus||'pendente');s('f-entrada-pagas',c.entradaParcelasPagas||0);calcularParcelas();}
   if(c.exitoTipo){document.getElementById('f-exito-tipo').value=c.exitoTipo;toggleExitoTipo();if(c.exitoTipo==='percentual')s('f-exito-percentual',c.exitoPercentual);else s('f-exito-valor',c.exitoValor);s('f-exito-status',c.exitoStatus||'aguardando');}
@@ -643,7 +670,14 @@ document.getElementById('f-cpf')?.addEventListener('blur',function(){const cpf=t
 // Salvar
 window.salvarContrato=async function(){
   const nome=document.getElementById('f-nome').value.trim(),dtF=document.getElementById('f-data-fechamento').value,closer=document.getElementById('f-closer').value,demanda=document.getElementById('f-demanda').value,menor=document.getElementById('f-menor').checked,inadimplente=document.getElementById('f-inadimplente').checked;
-  if(!nome){mostrarToast('Informe o nome.','error');return;}if(!dtF){mostrarToast('Informe a data.','error');return;}if(!closer){mostrarToast('Selecione o Closer.','error');return;}if(!demanda&&cat!=='OUTROS'){mostrarToast('Selecione o Benefício.','error');return;}if(cat==='OUTROS'&&!document.getElementById('f-demanda-outro').value.trim()){mostrarToast('Descreva o benefício no campo de texto.','error');return;}if(menor&&!document.getElementById('f-resp-nome').value.trim()){mostrarToast('Informe o responsável.','error');return;}
+  if(!nome){mostrarToast('Informe o nome completo.','error');return;}
+  if(!dtF){mostrarToast('Informe a data de fechamento.','error');return;}
+  if(!closer){mostrarToast('Selecione o Closer responsável.','error');return;}
+  const cat_=document.getElementById('f-categoria').value;
+  if(!cat_){mostrarToast('Selecione a Área (Previdenciário, Consumidor...).','error');return;}
+  if(cat_==='OUTROS'&&!document.getElementById('f-demanda-outro').value.trim()){mostrarToast('Descreva o benefício no campo de texto.','error');return;}
+  if(cat_!=='OUTROS'&&!demanda){mostrarToast('Selecione o Benefício / Demanda.','error');return;}
+  if(menor&&!document.getElementById('f-resp-nome').value.trim()){mostrarToast('Informe o nome do responsável legal.','error');return;}
   const dtC=document.getElementById('f-data-contrato').value,cat=document.getElementById('f-categoria').value,exitoTipo=document.getElementById('f-exito-tipo').value;const demandaFinal=cat==='OUTROS'?(document.getElementById('f-demanda-outro').value.trim()||'OUTRO'):demanda;
   const entradaValor=parseFloat(document.getElementById('f-entrada-valor').value)||0;
   const dados={nomeCliente:nome,cpf:document.getElementById('f-cpf').value.trim(),telefone:document.getElementById('f-telefone').value.trim(),telefone2:document.getElementById('f-telefone2').value.trim(),dataFechamento:dtF,dataContrato:dtC,tempoFechamento:calcularTempoDias(dtF,dtC),origem:document.getElementById('f-origem').value,closer,demanda:demandaFinal,categoria:cat||resolverArea(demandaFinal),local:document.getElementById('f-local').value,status:document.getElementById('f-status').value||'EM ANDAMENTO',protocolo:document.getElementById('f-protocolo').value.trim(),observacoes:document.getElementById('f-obs').value.trim(),menor,respNome:menor?document.getElementById('f-resp-nome').value.trim():'',respParentesco:menor?document.getElementById('f-resp-parentesco').value:'',respCPF:menor?document.getElementById('f-resp-cpf').value.trim():'',
