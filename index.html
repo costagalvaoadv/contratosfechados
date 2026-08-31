@@ -132,7 +132,7 @@
 
     <!-- KPIs -->
     <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('')"><p class="text-xs text-gray-400 font-medium">Total</p><p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-total">0</p><p class="text-[11px] text-gray-400 mt-1">Ver todos</p></div>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('')"><p class="text-xs text-gray-400 font-medium">Total</p><p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-total">0</p><p class="text-[11px] text-gray-400 mt-1" id="kpi-total-sub">Ver todos</p></div>
       <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('CONCEDIDO')"><p class="text-xs text-gray-400 font-medium">Concedidos</p><p class="text-2xl font-bold text-green-600 mt-0.5" id="kpi-concedidos">0</p><p class="text-[11px] text-green-500 mt-1" id="kpi-concedidos-pct">—</p></div>
       <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('PROTOCOLADO')"><p class="text-xs text-gray-400 font-medium">Protocolados</p><p class="text-2xl font-bold text-amber-600 mt-0.5" id="kpi-protocolado">0</p><p class="text-[11px] text-gray-400 mt-1" id="kpi-proto-pct">—</p></div>
       <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('PERDIDO')"><p class="text-xs text-gray-400 font-medium">Perdidos</p><p class="text-2xl font-bold text-red-500 mt-0.5" id="kpi-perdidos">0</p><p class="text-[11px] text-red-400 mt-1" id="kpi-perdidos-pct">—</p></div>
@@ -540,7 +540,7 @@ onSnapshot(query(collection(db,COL_EQ),orderBy('nome')),snap=>{
 
 onSnapshot(query(collection(db,COL),orderBy('criadoEm','desc')),snap=>{
   todosContratos=snap.docs.map(d=>({id:d.id,...d.data()}));
-  atualizarKPIs();atualizarMeta();aplicarFiltros();atualizarConexao(true);
+  atualizarMeta();aplicarFiltros();atualizarConexao(true);
 },err=>{console.error(err);atualizarConexao(false);});
 
 onSnapshot(collection(db,COL_ON),snap=>{
@@ -574,7 +574,7 @@ function atualizarMeta(){const el=document.getElementById('meta-bar');if(!el)ret
 window.definirMeta=async function(){const nova=prompt('Meta de contratos para este mês:');if(!nova||isNaN(parseInt(nova)))return;try{await setDoc(doc(db,COL_CFG,'geral'),{metaMensal:parseInt(nova)},{merge:true});mostrarToast('Meta definida!','success');}catch{mostrarToast('Erro.','error');}};
 
 // KPIs
-function atualizarKPIs(){const t=todosContratos.length,c=todosContratos.filter(x=>x.status==='CONCEDIDO').length,p=todosContratos.filter(x=>x.status==='PROTOCOLADO').length,pe=todosContratos.filter(x=>x.status==='PERDIDO').length;document.getElementById('kpi-total').textContent=t;document.getElementById('kpi-concedidos').textContent=c;document.getElementById('kpi-concedidos-pct').textContent=t?Math.round(c/t*100)+'% do total':'—';document.getElementById('kpi-protocolado').textContent=p;document.getElementById('kpi-proto-pct').textContent=t?Math.round(p/t*100)+'% do total':'—';document.getElementById('kpi-perdidos').textContent=pe;document.getElementById('kpi-perdidos-pct').textContent=t?Math.round(pe/t*100)+'% do total':'—';}
+function atualizarKPIs(lista){const base=lista||todosContratos;const t=base.length,cv=base.filter(x=>x.status==='CONCEDIDO').length,p=base.filter(x=>x.status==='PROTOCOLADO').length,pe=base.filter(x=>x.status==='PERDIDO').length;document.getElementById('kpi-total').textContent=t;document.getElementById('kpi-concedidos').textContent=cv;document.getElementById('kpi-concedidos-pct').textContent=t?Math.round(cv/t*100)+'% do total':'—';document.getElementById('kpi-protocolado').textContent=p;document.getElementById('kpi-proto-pct').textContent=t?Math.round(p/t*100)+'% do total':'—';document.getElementById('kpi-perdidos').textContent=pe;document.getElementById('kpi-perdidos-pct').textContent=t?Math.round(pe/t*100)+'% do total':'—';}
 window.filtrarKPI=function(s){document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));const idx=['','CONCEDIDO','PROTOCOLADO','PERDIDO'].indexOf(s);if(idx>=0)document.querySelectorAll('.kpi-card')[idx]?.classList.add('ativo');document.getElementById('sel-status').value=s;aplicarFiltros();};
 
 // Filtros
@@ -606,7 +606,11 @@ window.aplicarFiltros=function(){const busca=document.getElementById('busca')?.v
   if(intv)lista=lista.filter(c=>{if(!c.dataFechamento)return false;const d=new Date(c.dataFechamento+'T12:00:00');return d>=intv.de&&d<=intv.ate;});
   if(busca)lista=lista.filter(c=>(c.nomeCliente||'').toLowerCase().includes(busca)||(c.protocolo||'').toLowerCase().includes(busca)||(c.telefone||'').toLowerCase().includes(busca)||(c.cpf||'').replace(/\D/g,'').includes(busca.replace(/\D/g,'')));
   lista.sort((a,b)=>{if(sortBy==='fechamento_asc')return(a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;if(sortBy==='nome_asc')return(a.nomeCliente||'').localeCompare(b.nomeCliente||'');return(a.dataFechamento||'')<(b.dataFechamento||'')?1:-1;});
-  listaAtual=lista;renderizarTabela(lista);
+  listaAtual=lista;atualizarKPIs(lista);renderizarTabela(lista);
+  // Indicador de filtro ativo nos cards
+  const temFiltroAtivo=!!(busca||closer||status||local||cat||ben||(document.getElementById('sel-periodo')?.value||''));
+  const subEl=document.getElementById('kpi-total-sub');
+  if(subEl)subEl.textContent=temFiltroAtivo?'Resultado filtrado':'Ver todos';
   const tem=busca||closer||status||local||cat||ben||(document.getElementById('sel-periodo')?.value||'');
   document.getElementById('btn-limpar')?.classList.toggle('hidden',!tem);
 };
