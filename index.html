@@ -160,7 +160,7 @@
       </div>
       <div class="flex flex-wrap gap-2 items-center pt-2 border-t border-gray-100">
         <span class="text-[11px] text-gray-400 font-medium uppercase tracking-wide">Área</span>
-        <select id="sel-categoria" onchange="atualizarBeneficios()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600"><option value="">Todas as áreas</option><option value="PREVIDENCIÁRIO">Previdenciário</option><option value="CONSUMIDOR">Consumidor</option><option value="BANCÁRIO">Bancário</option><option value="TRABALHISTA">Trabalhista</option></select>
+        <select id="sel-categoria" onchange="atualizarBeneficios()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600"><option value="">Todas as áreas</option><option value="PREVIDENCIÁRIO">Previdenciário</option><option value="CONSUMIDOR">Consumidor</option><option value="BANCÁRIO">Bancário</option><option value="TRABALHISTA">Trabalhista</option><option value="OUTROS">Outros</option></select>
         <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
         <select id="sel-beneficio" onchange="aplicarFiltros()" class="filtro-select text-sm border border-gray-200 rounded-lg py-2 pl-3 pr-8 bg-gray-50 text-gray-600 min-w-[200px]"><option value="">Todos os benefícios</option></select>
         <div class="ml-auto flex items-center gap-2">
@@ -580,7 +580,24 @@ window.filtrarKPI=function(s){document.querySelectorAll('.kpi-card').forEach(c=>
 // Filtros
 window.onPeriodoChange=function(){const v=document.getElementById('sel-periodo').value;document.getElementById('bloco-data-especifica').classList.toggle('hidden',v!=='especifico');document.getElementById('sel-periodo').classList.toggle('ativo',!!v);if(v!=='especifico')aplicarFiltros();};
 function calcularIntervalo(){const v=document.getElementById('sel-periodo')?.value||'';if(!v)return null;const hj=new Date();hj.setHours(23,59,59,999);if(v==='mes_atual')return{de:new Date(hj.getFullYear(),hj.getMonth(),1),ate:hj};if(v==='mes_anterior')return{de:new Date(hj.getFullYear(),hj.getMonth()-1,1),ate:new Date(hj.getFullYear(),hj.getMonth(),0,23,59,59)};if(v==='especifico'){const de=document.getElementById('sel-data-de')?.value,ate=document.getElementById('sel-data-ate')?.value;if(!de&&!ate)return null;return{de:de?new Date(de+'T00:00:00'):new Date('2000-01-01'),ate:ate?new Date(ate+'T23:59:59'):new Date('2099-12-31')};}const dias=parseInt(v);if(!isNaN(dias)){const ini=new Date(hj);ini.setDate(ini.getDate()-dias);ini.setHours(0,0,0,0);return{de:ini,ate:hj};}return null;}
-window.atualizarBeneficios=function(){const cat=document.getElementById('sel-categoria').value,sel=document.getElementById('sel-beneficio');sel.innerHTML='<option value="">Todos os benefícios</option>';if(cat&&BENEFICIOS[cat])BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});document.getElementById('sel-categoria').classList.toggle('ativo',!!cat);aplicarFiltros();};
+window.atualizarBeneficios=function(){
+  const cat=document.getElementById('sel-categoria').value;
+  const sel=document.getElementById('sel-beneficio');
+  sel.innerHTML='<option value="">Todos os benefícios</option>';
+  if(cat==='OUTROS'){
+    // lista os valores únicos cadastrados como Outros nos contratos
+    const outros=[...new Set(todosContratos.filter(c=>c.categoria==='OUTROS'&&c.demanda).map(c=>c.demanda))].sort();
+    if(outros.length){
+      outros.forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});
+    } else {
+      sel.innerHTML='<option value="">Nenhum cadastrado ainda</option>';
+    }
+  } else if(cat&&BENEFICIOS[cat]){
+    BENEFICIOS[cat].forEach(b=>{sel.innerHTML+=`<option value="${esc(b)}">${esc(b)}</option>`;});
+  }
+  document.getElementById('sel-categoria').classList.toggle('ativo',!!cat);
+  aplicarFiltros();
+};
 window.popularBeneficiosForm=function(){
   const cat=document.getElementById('f-categoria').value;
   const sel=document.getElementById('f-demanda');
@@ -602,7 +619,7 @@ window.popularBeneficiosForm=function(){
 window.aplicarFiltros=function(){const busca=document.getElementById('busca')?.value.toLowerCase().trim()||'',closer=document.getElementById('sel-closer')?.value||'',status=document.getElementById('sel-status')?.value||'',local=document.getElementById('sel-local')?.value||'',cat=document.getElementById('sel-categoria')?.value||'',ben=document.getElementById('sel-beneficio')?.value||'',sortBy=document.getElementById('sort-select')?.value||'fechamento_desc',intv=calcularIntervalo();
   ['sel-closer','sel-status','sel-local','sel-beneficio'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('ativo',!!el.value);});
   let lista=[...todosContratos];
-  if(closer)lista=lista.filter(c=>c.closer===closer);if(status)lista=lista.filter(c=>(c.status||'EM ANDAMENTO')===status);if(local)lista=lista.filter(c=>c.local===local);if(cat)lista=lista.filter(c=>resolverArea(c.demanda)===cat);if(ben)lista=lista.filter(c=>c.demanda===ben);
+  if(closer)lista=lista.filter(c=>c.closer===closer);if(status)lista=lista.filter(c=>(c.status||'EM ANDAMENTO')===status);if(local)lista=lista.filter(c=>c.local===local);if(cat){if(cat==='OUTROS')lista=lista.filter(c=>c.categoria==='OUTROS');else lista=lista.filter(c=>resolverArea(c.demanda)===cat&&c.categoria!=='OUTROS');}if(ben)lista=lista.filter(c=>c.demanda===ben);
   if(intv)lista=lista.filter(c=>{if(!c.dataFechamento)return false;const d=new Date(c.dataFechamento+'T12:00:00');return d>=intv.de&&d<=intv.ate;});
   if(busca)lista=lista.filter(c=>(c.nomeCliente||'').toLowerCase().includes(busca)||(c.protocolo||'').toLowerCase().includes(busca)||(c.telefone||'').toLowerCase().includes(busca)||(c.cpf||'').replace(/\D/g,'').includes(busca.replace(/\D/g,'')));
   lista.sort((a,b)=>{if(sortBy==='fechamento_asc')return(a.dataFechamento||'')>(b.dataFechamento||'')?1:-1;if(sortBy==='nome_asc')return(a.nomeCliente||'').localeCompare(b.nomeCliente||'');return(a.dataFechamento||'')<(b.dataFechamento||'')?1:-1;});
