@@ -125,7 +125,7 @@
     <!-- meta-bar removida: card Meu Mês no dashboard -->
 
     <!-- KPIs -->
-    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <section class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
       <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-hoje" onclick="filtrarKPI('hoje')">
         <p class="text-xs text-gray-400 font-medium">Fechados Hoje</p>
         <p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-hoje">0</p>
@@ -141,12 +141,40 @@
         <p class="text-2xl font-bold text-gray-700 mt-0.5" id="kpi-total">0</p>
         <p class="text-[11px] text-gray-400 mt-1" id="kpi-total-sub">todos os contratos</p>
       </div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-minha-meta">
-        <p class="text-xs text-gray-400 font-medium">Meu Mês</p>
-        <p class="text-2xl font-bold mt-0.5" id="kpi-meu-mes">0</p>
-        <p class="text-[11px] mt-1" id="kpi-meu-mes-sub">—</p>
+      <!-- Painel pessoal — ocupa 2 colunas em telas grandes -->
+      <div class="bg-white rounded-xl border border-gray-200 px-4 py-3.5 sm:col-span-2 lg:col-span-1" id="card-minha-meta" style="min-width:0">
+        <p class="text-xs text-gray-400 font-medium mb-2">Minha Performance</p>
+        <!-- Linha dos dois meses -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Mês atual -->
+          <div id="painel-mes-atual" class="rounded-lg p-2.5" style="background:#EEF2FF">
+            <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wide mb-1" id="label-mes-atual">Este mês</p>
+            <p class="text-xl font-bold text-brand-600" id="pm-contratos-atual">0</p>
+            <p class="text-[11px] text-brand-500 font-medium mt-0.5" id="pm-bonif-atual">—</p>
+            <p class="text-[10px] text-gray-400 mt-1 leading-tight" id="pm-proximo-atual"></p>
+          </div>
+          <!-- Mês anterior -->
+          <div id="painel-mes-anterior" class="rounded-lg p-2.5 bg-gray-50">
+            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1" id="label-mes-anterior">Mês anterior</p>
+            <p class="text-xl font-bold text-gray-600" id="pm-contratos-anterior">0</p>
+            <p class="text-[11px] text-gray-500 font-medium mt-0.5" id="pm-bonif-anterior">—</p>
+            <p class="text-[10px] mt-1 leading-tight" id="pm-comparativo"></p>
+          </div>
+        </div>
       </div>
     </section>
+
+    <!-- Painel da Gestora — visível apenas para admin -->
+    <div id="painel-gestora" class="hidden bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+        <div>
+          <p class="text-sm font-semibold text-gray-800">Equipe — Mês Atual</p>
+          <p class="text-xs text-gray-400 mt-0.5" id="gestora-mes-label">—</p>
+        </div>
+        <span class="text-[11px] text-gray-400 font-medium">Meta: 8 contratos · Bônus a partir de 10</span>
+      </div>
+      <div id="gestora-lista" class="divide-y divide-gray-50 px-5 py-2"></div>
+    </div>
 
     <!-- Filtros -->
     <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2.5">
@@ -545,12 +573,12 @@ onSnapshot(query(collection(db,COL_EQ),orderBy('nome')),snap=>{
   equipe.filter(e=>e.ativo!==false).forEach(e=>{sel.innerHTML+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});
   if(cur)sel.value=cur;
   ['sel-closer','rel-closer'].forEach(id=>{const s=document.getElementById(id);if(!s)return;const v=s.value;s.innerHTML='<option value="">Todos os closers</option>';equipe.filter(e=>e.ativo!==false).forEach(e=>{s.innerHTML+=`<option value="${esc(e.nome)}">${esc(e.nome)}</option>`;});if(v)s.value=v;});
-  preencherSelectEquipeForm();renderizarEquipeLista();
+  preencherSelectEquipeForm();renderizarEquipeLista();renderizarPainelGestora();
 });
 
 onSnapshot(query(collection(db,COL),orderBy('criadoEm','desc')),snap=>{
   todosContratos=snap.docs.map(d=>({id:d.id,...d.data()}));
-  atualizarMeta();aplicarFiltros();atualizarConexao(true);
+  atualizarMeta();aplicarFiltros();atualizarConexao(true);renderizarPainelGestora();
 },err=>{console.error(err);atualizarConexao(false);});
 
 onSnapshot(collection(db,COL_ON),snap=>{
@@ -572,7 +600,19 @@ function renderizarAuditoriaLista(logs){const el=document.getElementById('audito
 
 // Login
 window.fazerLogin=async function(){const nome=document.getElementById('login-nome').value.trim(),senha=document.getElementById('login-senha').value.trim();if(!nome){mostrarToast('Selecione seu nome.','error');return;}if(!senha){mostrarToast('Informe sua senha.','error');return;}setLoginLoad(true);await sleep(350);const col=equipe.find(e=>e.nome===nome&&e.ativo!==false);if(!col){mostrarToast('Usuário não encontrado.','error');setLoginLoad(false);return;}if(col.senha!==senha){mostrarToast('Senha incorreta.','error');setLoginLoad(false);return;}usuarioAtual={id:col.id,nome:col.nome,admin:col.admin===true};salvarSessao(usuarioAtual);await registrarPresenca();entrarNoApp();setLoginLoad(false);};
-function entrarNoApp(){document.getElementById('tela-login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-label').textContent=usuarioAtual.nome;document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();if(usuarioAtual.admin)['btn-equipe','btn-auditoria','btn-backup','btn-financeiro'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));}
+function entrarNoApp(){
+  document.getElementById('tela-login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('user-label').textContent=usuarioAtual.nome;
+  document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();
+  if(usuarioAtual.admin){
+    ['btn-equipe','btn-auditoria','btn-backup','btn-financeiro'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));
+    document.getElementById('painel-gestora')?.classList.remove('hidden');
+  }
+  // Abrir já filtrado no mês atual
+  const selPeriodo=document.getElementById('sel-periodo');
+  if(selPeriodo){selPeriodo.value='mes_atual';selPeriodo.classList.add('ativo');}
+}
 window.sair=async function(){await removerPresenca();limparSessao();usuarioAtual=null;document.getElementById('app').classList.add('hidden');document.getElementById('tela-login').classList.remove('hidden');document.getElementById('login-senha').value='';};
 window.toggleSenha=()=>{const el=document.getElementById('login-senha');el.type=el.type==='password'?'text':'password';};
 function setLoginLoad(v){document.getElementById('btn-login').disabled=v;document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar';document.getElementById('btn-login-spin').classList.toggle('hidden',!v);}
@@ -581,6 +621,57 @@ window.addEventListener('beforeunload',()=>removerPresenca());
 
 // Meta
 function atualizarMeta(){/* substituída pelo card Meu Mês */}
+
+function renderizarPainelGestora(){
+  if(!usuarioAtual?.admin)return;
+  const hj=new Date();
+  const lista=document.getElementById('gestora-lista');
+  const label=document.getElementById('gestora-mes-label');
+  if(!lista)return;
+  if(label) label.textContent=hj.toLocaleString('pt-BR',{month:'long',year:'numeric'});
+
+  // Calcular por atendente
+  const ativos=equipe.filter(e=>e.ativo!==false);
+  if(!ativos.length){lista.innerHTML='<p class="text-sm text-gray-400 py-4 text-center">Nenhum colaborador cadastrado.</p>';return;}
+
+  const rows=ativos.map(pessoa=>{
+    const qtd=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      if(!ref||c.closer!==pessoa.nome)return false;
+      const d=new Date(ref+'T12:00:00');
+      return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();
+    }).length;
+
+    // Bonificação
+    let bonif=0,cor='',status='',barCor='';
+    if(qtd>=20){bonif=qtd*25;cor='text-yellow-600';status='🏆 Nível Ouro';barCor='bg-yellow-400';}
+    else if(qtd>=10){bonif=qtd*15;cor='text-green-600';status='⭐ Bonificação ativa';barCor='bg-green-500';}
+    else if(qtd>=8){cor='text-green-500';status='✅ Meta atingida';barCor='bg-green-400';}
+    else{cor='text-gray-500';status=`Faltam ${8-qtd} para a meta`;barCor='bg-brand-400';}
+
+    const pct=Math.min(Math.round(qtd/8*100),100);
+    const pct10=Math.min(Math.round(qtd/10*100),100);
+    const bonifTxt=bonif>0?` · ${bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`:'';
+
+    return `<div class="flex items-center gap-3 py-3">
+      <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-700 flex-shrink-0">${esc(pessoa.nome.charAt(0).toUpperCase())}</div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium text-gray-800">${esc(pessoa.nome)}</span>
+          <span class="text-sm font-bold ${cor}">${qtd} contrato${qtd!==1?'s':''}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div class="${barCor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
+          </div>
+          <span class="text-[11px] ${cor} font-medium whitespace-nowrap flex-shrink-0">${status}${bonifTxt}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  lista.innerHTML=rows;
+}
 window.definirMeta=async function(){const nova=prompt('Meta de contratos para este mês:');if(!nova||isNaN(parseInt(nova)))return;try{await setDoc(doc(db,COL_CFG,'geral'),{metaMensal:parseInt(nova)},{merge:true});mostrarToast('Meta definida!','success');}catch{mostrarToast('Erro.','error');}};
 
 // KPIs
@@ -614,34 +705,70 @@ function atualizarKPIs(lista){
       return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();
     }).length;
 
-    let bonif=0,nivel='';
-    if(meuMes>=20){bonif=meuMes*25;nivel='🏆 Nível Ouro';}
-    else if(meuMes>=10){bonif=meuMes*15;nivel='⭐ Bonificação ativa';}
-    else if(meuMes>=8){nivel='✅ Meta atingida';}
-    else{nivel=`${8-meuMes} para a meta`;}
-
-    const numEl=document.getElementById('kpi-meu-mes');
-    const subEl=document.getElementById('kpi-meu-mes-sub');
-    const card=document.getElementById('card-minha-meta');
-
-    numEl.textContent=meuMes;
-    card.className=card.className.replace(/border-\w+-\d+/g,'').trim();
-    if(meuMes>=20){
-      numEl.className='text-2xl font-bold mt-0.5 text-yellow-500';
-      card.classList.add('border-yellow-300');
-      subEl.className='text-[11px] mt-1 text-yellow-600 font-semibold';
-    } else if(meuMes>=10){
-      numEl.className='text-2xl font-bold mt-0.5 text-green-600';
-      card.classList.add('border-green-300');
-      subEl.className='text-[11px] mt-1 text-green-600 font-semibold';
-    } else if(meuMes>=8){
-      numEl.className='text-2xl font-bold mt-0.5 text-green-500';
-      subEl.className='text-[11px] mt-1 text-green-500 font-medium';
-    } else {
-      numEl.className='text-2xl font-bold mt-0.5 text-brand-600';
-      subEl.className='text-[11px] mt-1 text-gray-400';
+    // ── Função de cálculo de bonificação ──
+    function calcBonif(qtd){
+      if(qtd>=20) return qtd*25;
+      if(qtd>=10) return qtd*15;
+      return 0;
     }
-    subEl.textContent=bonif>0?`${nivel} · ${bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`:nivel;
+    function calcNivel(qtd){
+      if(qtd>=20) return{emoji:'🏆',label:'Nível Ouro',cor:'text-yellow-500',bg:'#FEF9C3',borda:'border-yellow-300'};
+      if(qtd>=10) return{emoji:'⭐',label:'Bonificação ativa',cor:'text-green-600',bg:'#F0FDF4',borda:'border-green-300'};
+      if(qtd>=8)  return{emoji:'✅',label:'Meta atingida',cor:'text-green-500',bg:'#F0FDF4',borda:'border-green-200'};
+      return{emoji:'🎯',label:'Abaixo da meta',cor:'text-brand-600',bg:'#EEF2FF',borda:'border-brand-200'};
+    }
+    function textoProximo(qtd){
+      if(qtd>=20) return '';
+      if(qtd>=10) return `Faltam ${20-qtd} para R$ 25/contrato`;
+      if(qtd>=8)  return `Faltam ${10-qtd} para bonificação de R$ 15/contrato`;
+      return `Faltam ${8-qtd} para a meta mínima`;
+    }
+
+    // Mês atual
+    const bonifAtual=calcBonif(meuMes);
+    const nivelAtual=calcNivel(meuMes);
+    const painelAtual=document.getElementById('painel-mes-atual');
+    if(painelAtual) painelAtual.style.background=nivelAtual.bg;
+    const el_ca=document.getElementById('pm-contratos-atual');
+    if(el_ca){el_ca.textContent=meuMes;el_ca.className=`text-xl font-bold ${nivelAtual.cor}`;}
+    const el_ba=document.getElementById('pm-bonif-atual');
+    if(el_ba){
+      el_ba.className=`text-[11px] font-semibold mt-0.5 ${nivelAtual.cor}`;
+      el_ba.textContent=bonifAtual>0?`${nivelAtual.emoji} ${bonifAtual.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} este mês`:`${nivelAtual.emoji} ${nivelAtual.label}`;
+    }
+    const el_pa=document.getElementById('pm-proximo-atual');
+    if(el_pa){el_pa.textContent=textoProximo(meuMes);el_pa.className='text-[10px] text-gray-500 mt-1 leading-tight';}
+
+    // Mês anterior
+    const hjAnt=new Date(hj.getFullYear(),hj.getMonth()-1,1);
+    const meuMesAnt=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      if(!ref||c.closer!==usuarioAtual.nome)return false;
+      const d=new Date(ref+'T12:00:00');
+      return d.getMonth()===hjAnt.getMonth()&&d.getFullYear()===hjAnt.getFullYear();
+    }).length;
+    const bonifAnt=calcBonif(meuMesAnt);
+    const nivelAnt=calcNivel(meuMesAnt);
+    const labelAnt=document.getElementById('label-mes-anterior');
+    if(labelAnt) labelAnt.textContent=hjAnt.toLocaleString('pt-BR',{month:'long'});
+    const el_cp=document.getElementById('pm-contratos-anterior');
+    if(el_cp){el_cp.textContent=meuMesAnt;el_cp.className=`text-xl font-bold ${nivelAnt.cor}`;}
+    const el_bp=document.getElementById('pm-bonif-anterior');
+    if(el_bp){
+      el_bp.className=`text-[11px] font-medium mt-0.5 ${bonifAnt>0?nivelAnt.cor:'text-gray-400'}`;
+      el_bp.textContent=bonifAnt>0?`${nivelAnt.emoji} ${bonifAnt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} recebidos`:`${meuMesAnt} contratos`;
+    }
+    // Comparativo
+    const diff=meuMes-meuMesAnt;
+    const el_comp=document.getElementById('pm-comparativo');
+    if(el_comp){
+      if(diff>0){el_comp.textContent=`▲ +${diff} em relação ao mês passado`;el_comp.className='text-[10px] text-green-600 mt-1 leading-tight font-medium';}
+      else if(diff<0){el_comp.textContent=`▼ ${diff} em relação ao mês passado`;el_comp.className='text-[10px] text-red-500 mt-1 leading-tight font-medium';}
+      else{el_comp.textContent='Igual ao mês passado';el_comp.className='text-[10px] text-gray-400 mt-1 leading-tight';}
+    }
+    // Borda do card
+    const card=document.getElementById('card-minha-meta');
+    if(card){card.className=card.className.replace(/border-\S+/g,'border-gray-200').trim();card.classList.add(nivelAtual.borda);}
   }
 }
 window.filtrarKPI=function(s){
