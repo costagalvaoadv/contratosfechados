@@ -56,7 +56,19 @@
     /* Instrução de ajuda */
     .help-tip{font-size:.7rem;color:#9CA3AF;margin-top:.2rem;line-height:1.4}
     .help-tip strong{color:#6366F1;font-weight:600}
-    @media print{body>*{display:none!important}#print-area{display:block!important;position:static!important;width:100%!important;padding:1.5rem;background:#fff;color:#111}}
+    /* Animações dashboard */
+    @keyframes barFill{from{width:0}to{width:var(--bar-w)}}
+    @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse-fire{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+    @keyframes slideDown{from{opacity:0;max-height:0;transform:translateY(-8px)}to{opacity:1;max-height:600px;transform:translateY(0)}}
+    .bar-anim{animation:barFill .8s cubic-bezier(.4,0,.2,1) forwards}
+    .count-anim{animation:countUp .4s ease forwards}
+    .fire-anim{display:inline-block;animation:pulse-fire 1s ease-in-out infinite}
+    .historico-panel{animation:slideDown .3s ease forwards;overflow:hidden}
+    .card-atendente{transition:box-shadow .2s,border-color .2s;cursor:pointer}
+    .card-atendente:hover{box-shadow:0 4px 16px rgba(99,102,241,.12)}
+    @media print{
+body>*{display:none!important}#print-area{display:block!important;position:static!important;width:100%!important;padding:1.5rem;background:#fff;color:#111}}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen">
@@ -141,39 +153,59 @@
         <p class="text-2xl font-bold text-gray-700 mt-0.5" id="kpi-total">0</p>
         <p class="text-[11px] text-gray-400 mt-1" id="kpi-total-sub">todos os contratos</p>
       </div>
-      <!-- Painel pessoal — ocupa 2 colunas em telas grandes -->
-      <div class="bg-white rounded-xl border border-gray-200 px-4 py-3.5 sm:col-span-2 lg:col-span-1" id="card-minha-meta" style="min-width:0">
-        <p class="text-xs text-gray-400 font-medium mb-2">Minha Performance</p>
-        <!-- Linha dos dois meses -->
-        <div class="grid grid-cols-2 gap-3">
+      <!-- Painel pessoal interativo -->
+      <div class="bg-white rounded-xl border border-gray-200 sm:col-span-2 lg:col-span-2 overflow-hidden" id="card-minha-meta">
+        <div class="px-4 pt-3 pb-1 flex items-center justify-between">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Minha Performance</p>
+          <span id="pm-fire" class="hidden text-base fire-anim">🔥</span>
+        </div>
+        <div class="grid grid-cols-2 divide-x divide-gray-100">
           <!-- Mês atual -->
-          <div id="painel-mes-atual" class="rounded-lg p-2.5" style="background:#EEF2FF">
+          <div id="painel-mes-atual" class="px-4 py-3" style="background:#EEF2FF">
             <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wide mb-1" id="label-mes-atual">Este mês</p>
-            <p class="text-xl font-bold text-brand-600" id="pm-contratos-atual">0</p>
-            <p class="text-[11px] text-brand-500 font-medium mt-0.5" id="pm-bonif-atual">—</p>
-            <p class="text-[10px] text-gray-400 mt-1 leading-tight" id="pm-proximo-atual"></p>
+            <p class="text-3xl font-bold text-brand-600 count-anim" id="pm-contratos-atual">0</p>
+            <p class="text-[11px] font-semibold mt-1" id="pm-bonif-atual">—</p>
+            <!-- Barra de progresso animada -->
+            <div class="mt-2 space-y-1">
+              <div class="w-full bg-white/60 rounded-full h-1.5 overflow-hidden">
+                <div id="pm-bar-meta" class="bar-anim h-1.5 rounded-full bg-brand-500" style="--bar-w:0%;width:0%"></div>
+              </div>
+              <p class="text-[10px] text-brand-700 leading-tight" id="pm-proximo-atual"></p>
+            </div>
           </div>
           <!-- Mês anterior -->
-          <div id="painel-mes-anterior" class="rounded-lg p-2.5 bg-gray-50">
-            <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1" id="label-mes-anterior">Mês anterior</p>
-            <p class="text-xl font-bold text-gray-600" id="pm-contratos-anterior">0</p>
-            <p class="text-[11px] text-gray-500 font-medium mt-0.5" id="pm-bonif-anterior">—</p>
-            <p class="text-[10px] mt-1 leading-tight" id="pm-comparativo"></p>
+          <div id="painel-mes-anterior" class="px-4 py-3 bg-gray-50">
+            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1" id="label-mes-anterior">Mês anterior</p>
+            <p class="text-3xl font-bold text-gray-500 count-anim" id="pm-contratos-anterior">0</p>
+            <p class="text-[11px] font-medium mt-1" id="pm-bonif-anterior">—</p>
+            <div class="mt-2">
+              <p class="text-[10px] leading-tight font-medium" id="pm-comparativo"></p>
+            </div>
           </div>
+        </div>
+        <!-- Histórico 3 meses — clique para expandir -->
+        <button onclick="toggleHistorico()" class="w-full px-4 py-2 text-[11px] text-gray-400 hover:text-brand-600 border-t border-gray-100 text-left flex items-center justify-between transition-colors">
+          <span>Ver histórico dos últimos 3 meses</span>
+          <svg id="historico-chevron" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div id="historico-panel" class="hidden px-4 pb-3 historico-panel">
+          <div id="historico-conteudo" class="space-y-2 pt-1"></div>
         </div>
       </div>
     </section>
 
     <!-- Painel da Gestora — visível apenas para admin -->
     <div id="painel-gestora" class="hidden bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
         <div>
-          <p class="text-sm font-semibold text-gray-800">Equipe — Mês Atual</p>
-          <p class="text-xs text-gray-400 mt-0.5" id="gestora-mes-label">—</p>
+          <p class="text-sm font-semibold text-gray-800">Equipe — <span id="gestora-mes-label">—</span></p>
+          <p class="text-xs text-gray-400 mt-0.5">Meta individual: 8 contratos · Bônus: 10+ contratos R$15/contrato · 20+ contratos R$25/contrato</p>
         </div>
-        <span class="text-[11px] text-gray-400 font-medium">Meta: 8 contratos · Bônus a partir de 10</span>
+        <div class="flex items-center gap-3 text-[11px] text-gray-400">
+          <span id="gestora-resumo"></span>
+        </div>
       </div>
-      <div id="gestora-lista" class="divide-y divide-gray-50 px-5 py-2"></div>
+      <div id="gestora-lista" class="divide-y divide-gray-50"></div>
     </div>
 
     <!-- Filtros -->
@@ -578,6 +610,20 @@ onSnapshot(query(collection(db,COL_EQ),orderBy('nome')),snap=>{
 
 onSnapshot(query(collection(db,COL),orderBy('criadoEm','desc')),snap=>{
   todosContratos=snap.docs.map(d=>({id:d.id,...d.data()}));
+  // Detectar novo contrato em tempo real
+  const novoTotal=snap.docs.length;
+  if(typeof window._ultimoTotal!=='undefined'&&novoTotal>window._ultimoTotal){
+    const novo=snap.docs[0]?.data();
+    if(novo){
+      const nomeC=novo.nomeCliente||'Cliente';
+      const closer=novo.closer||'';
+      mostrarToastContrato(nomeC,closer);
+      // Animar card de hoje
+      const el=document.getElementById('kpi-hoje');
+      if(el){el.classList.add('count-anim');setTimeout(()=>el.classList.remove('count-anim'),500);}
+    }
+  }
+  window._ultimoTotal=novoTotal;
   atualizarMeta();aplicarFiltros();atualizarConexao(true);renderizarPainelGestora();
 },err=>{console.error(err);atualizarConexao(false);});
 
@@ -625,53 +671,144 @@ function atualizarMeta(){/* substituída pelo card Meu Mês */}
 function renderizarPainelGestora(){
   if(!usuarioAtual?.admin)return;
   const hj=new Date();
+  const hjStr=hj.toISOString().split('T')[0];
   const lista=document.getElementById('gestora-lista');
   const label=document.getElementById('gestora-mes-label');
+  const resumoEl=document.getElementById('gestora-resumo');
   if(!lista)return;
   if(label) label.textContent=hj.toLocaleString('pt-BR',{month:'long',year:'numeric'});
 
-  // Calcular por atendente
   const ativos=equipe.filter(e=>e.ativo!==false);
-  if(!ativos.length){lista.innerHTML='<p class="text-sm text-gray-400 py-4 text-center">Nenhum colaborador cadastrado.</p>';return;}
+  if(!ativos.length){lista.innerHTML='<p class="text-sm text-gray-400 py-6 text-center">Nenhum colaborador cadastrado.</p>';return;}
+
+  function gBonif(q){return q>=20?q*25:q>=10?q*15:0;}
+  function gNivel(q){
+    if(q>=20)return{emoji:'🏆',label:'Nível Ouro',cor:'text-yellow-600',barCor:'#F59E0B',bg:'#FFFBEB'};
+    if(q>=10)return{emoji:'⭐',label:'Bonificação ativa',cor:'text-green-600',barCor:'#22C55E',bg:'#F0FDF4'};
+    if(q>=8) return{emoji:'✅',label:'Meta atingida',cor:'text-green-500',barCor:'#4ADE80',bg:'#F0FDF4'};
+    return{emoji:'🎯',label:`Faltam ${8-q} para meta`,cor:'text-gray-500',barCor:'#818CF8',bg:'#F8FAFC'};
+  }
+
+  // Contratos de ontem para detectar "em alta"
+  const ontem=new Date(hj);ontem.setDate(ontem.getDate()-1);
+  const ontemStr=ontem.toISOString().split('T')[0];
+
+  let totalBonif=0,totalMeta=0;
 
   const rows=ativos.map(pessoa=>{
-    const qtd=todosContratos.filter(c=>{
+    const qtdMes=todosContratos.filter(c=>{
       const ref=c.dataContrato||c.dataFechamento;
       if(!ref||c.closer!==pessoa.nome)return false;
       const d=new Date(ref+'T12:00:00');
       return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();
     }).length;
 
-    // Bonificação
-    let bonif=0,cor='',status='',barCor='';
-    if(qtd>=20){bonif=qtd*25;cor='text-yellow-600';status='🏆 Nível Ouro';barCor='bg-yellow-400';}
-    else if(qtd>=10){bonif=qtd*15;cor='text-green-600';status='⭐ Bonificação ativa';barCor='bg-green-500';}
-    else if(qtd>=8){cor='text-green-500';status='✅ Meta atingida';barCor='bg-green-400';}
-    else{cor='text-gray-500';status=`Faltam ${8-qtd} para a meta`;barCor='bg-brand-400';}
+    const qtdHoje=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      return ref===hjStr&&c.closer===pessoa.nome;
+    }).length;
 
-    const pct=Math.min(Math.round(qtd/8*100),100);
-    const pct10=Math.min(Math.round(qtd/10*100),100);
-    const bonifTxt=bonif>0?` · ${bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`:'';
+    const qtdOntem=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      return ref===ontemStr&&c.closer===pessoa.nome;
+    }).length;
 
-    return `<div class="flex items-center gap-3 py-3">
-      <div class="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-700 flex-shrink-0">${esc(pessoa.nome.charAt(0).toUpperCase())}</div>
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-sm font-medium text-gray-800">${esc(pessoa.nome)}</span>
-          <span class="text-sm font-bold ${cor}">${qtd} contrato${qtd!==1?'s':''}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-            <div class="${barCor} h-2 rounded-full transition-all duration-500" style="width:${pct}%"></div>
+    const emAlta=qtdHoje>qtdOntem&&qtdHoje>0;
+    const bonif=gBonif(qtdMes);
+    const nivel=gNivel(qtdMes);
+    if(bonif>0)totalBonif+=bonif;
+    if(qtdMes>=8)totalMeta++;
+
+    // Barra: até 8 = meta, após 8 muda cor
+    const pctMeta=Math.min(Math.round(qtdMes/8*100),100);
+    const pctBonus=qtdMes>=10?Math.min(Math.round((qtdMes-10)/10*100),100):0;
+    const bonifTxt=bonif>0?bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'';
+
+    return `<div class="card-atendente px-5 py-3.5 hover:bg-gray-50" onclick="toggleHistoricoGestora('${esc(pessoa.nome)}',this)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style="background:${nivel.bg};color:#4F46E5">${esc(pessoa.nome.charAt(0).toUpperCase())}</div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="text-sm font-semibold text-gray-800">${esc(pessoa.nome)}</span>
+            ${emAlta?'<span class="text-sm fire-anim">🔥</span>':''}
+            ${qtdHoje>0?`<span class="text-[10px] bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded font-semibold">+${qtdHoje} hoje</span>`:''}
+            <span class="ml-auto text-sm font-bold ${nivel.cor}">${qtdMes} contrato${qtdMes!==1?'s':''}</span>
           </div>
-          <span class="text-[11px] ${cor} font-medium whitespace-nowrap flex-shrink-0">${status}${bonifTxt}</span>
+          <!-- Barra dupla: meta + bônus -->
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] text-gray-400 w-8 flex-shrink-0">Meta</span>
+              <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div class="bar-anim h-2 rounded-full" style="--bar-w:${pctMeta}%;width:0%;background:${nivel.barCor}"></div>
+              </div>
+              <span class="text-[10px] text-gray-500 w-6 text-right">${pctMeta}%</span>
+            </div>
+            ${qtdMes>=8?`<div class="flex items-center gap-2">
+              <span class="text-[9px] text-gray-400 w-8 flex-shrink-0">Bônus</span>
+              <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                <div class="bar-anim h-2 rounded-full bg-yellow-400" style="--bar-w:${pctBonus}%;width:0%"></div>
+              </div>
+              <span class="text-[10px] font-semibold ${nivel.cor}">${bonifTxt||nivel.label}</span>
+            </div>`:''}
+          </div>
         </div>
+      </div>
+      <!-- Histórico expandível -->
+      <div id="hist-gestora-${esc(pessoa.nome.replace(/\s+/g,'_'))}" class="hidden mt-3 pt-3 border-t border-gray-100 historico-panel">
+        <div class="historico-gestora-conteudo"></div>
       </div>
     </div>`;
   }).join('');
 
   lista.innerHTML=rows;
+
+  // Resumo
+  if(resumoEl) resumoEl.textContent=`${totalMeta}/${ativos.length} na meta · ${totalBonif>0?totalBonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' em bônus':'R$ 0 em bônus'}`;
+
+  // Disparar animação das barras após render
+  setTimeout(()=>{
+    document.querySelectorAll('.bar-anim').forEach(el=>{
+      const w=el.style.getPropertyValue('--bar-w');
+      el.style.width=w;
+    });
+  },100);
 }
+
+window.toggleHistoricoGestora=function(nome,row){
+  const id=`hist-gestora-${nome.replace(/\s+/g,'_')}`;
+  const painel=document.getElementById(id);
+  if(!painel)return;
+  const aberto=!painel.classList.contains('hidden');
+  // Fechar todos
+  document.querySelectorAll('[id^="hist-gestora-"]').forEach(p=>p.classList.add('hidden'));
+  if(aberto)return;
+  painel.classList.remove('hidden');
+  // Renderizar histórico 3 meses
+  const hj=new Date();
+  const conteudo=painel.querySelector('.historico-gestora-conteudo');
+  if(!conteudo)return;
+  function gBonif2(q){return q>=20?q*25:q>=10?q*15:0;}
+  const meses=[0,1,2].map(i=>{
+    const d=new Date(hj.getFullYear(),hj.getMonth()-i,1);
+    const qtd=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      if(!ref||c.closer!==nome)return false;
+      const dt=new Date(ref+'T12:00:00');
+      return dt.getMonth()===d.getMonth()&&dt.getFullYear()===d.getFullYear();
+    }).length;
+    return{label:d.toLocaleString('pt-BR',{month:'long'}),qtd,bonif:gBonif2(qtd)};
+  });
+  const maxQtd=Math.max(...meses.map(m=>m.qtd),1);
+  conteudo.innerHTML=`<p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-2">Histórico — últimos 3 meses</p>`+meses.map(m=>`
+    <div class="flex items-center gap-2 mb-1.5">
+      <span class="text-[11px] text-gray-500 w-16 flex-shrink-0 capitalize">${m.label}</span>
+      <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div class="h-2 rounded-full ${m.qtd>=10?'bg-green-400':m.qtd>=8?'bg-green-300':'bg-brand-300'}" style="width:${Math.round(m.qtd/maxQtd*100)}%"></div>
+      </div>
+      <span class="text-[11px] font-semibold text-gray-700 w-4 text-right">${m.qtd}</span>
+      <span class="text-[11px] text-gray-400 w-20 text-right">${m.bonif>0?m.bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):''}</span>
+    </div>`).join('');
+};
 window.definirMeta=async function(){const nova=prompt('Meta de contratos para este mês:');if(!nova||isNaN(parseInt(nova)))return;try{await setDoc(doc(db,COL_CFG,'geral'),{metaMensal:parseInt(nova)},{merge:true});mostrarToast('Meta definida!','success');}catch{mostrarToast('Erro.','error');}};
 
 // KPIs
@@ -705,39 +842,20 @@ function atualizarKPIs(lista){
       return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();
     }).length;
 
-    // ── Função de cálculo de bonificação ──
-    function calcBonif(qtd){
-      if(qtd>=20) return qtd*25;
-      if(qtd>=10) return qtd*15;
-      return 0;
+    // ── Cálculos ──
+    function calcBonif(q){return q>=20?q*25:q>=10?q*15:0;}
+    function calcNivel(q){
+      if(q>=20)return{emoji:'🏆',label:'Nível Ouro',cor:'text-yellow-500',bg:'#FEF9C3',borda:'border-yellow-300',barCor:'#F59E0B'};
+      if(q>=10)return{emoji:'⭐',label:'Bonificação ativa',cor:'text-green-600',bg:'#F0FDF4',borda:'border-green-300',barCor:'#22C55E'};
+      if(q>=8) return{emoji:'✅',label:'Meta atingida',cor:'text-green-500',bg:'#F0FDF4',borda:'border-green-200',barCor:'#4ADE80'};
+      return{emoji:'🎯',label:'Abaixo da meta',cor:'text-brand-600',bg:'#EEF2FF',borda:'border-brand-200',barCor:'#818CF8'};
     }
-    function calcNivel(qtd){
-      if(qtd>=20) return{emoji:'🏆',label:'Nível Ouro',cor:'text-yellow-500',bg:'#FEF9C3',borda:'border-yellow-300'};
-      if(qtd>=10) return{emoji:'⭐',label:'Bonificação ativa',cor:'text-green-600',bg:'#F0FDF4',borda:'border-green-300'};
-      if(qtd>=8)  return{emoji:'✅',label:'Meta atingida',cor:'text-green-500',bg:'#F0FDF4',borda:'border-green-200'};
-      return{emoji:'🎯',label:'Abaixo da meta',cor:'text-brand-600',bg:'#EEF2FF',borda:'border-brand-200'};
+    function textoProximo(q){
+      if(q>=20)return '';
+      if(q>=10)return `Faltam ${20-q} para R$ 25/contrato`;
+      if(q>=8) return `Faltam ${10-q} para bonificação de R$ 15/contrato`;
+      return `Faltam ${8-q} para a meta mínima`;
     }
-    function textoProximo(qtd){
-      if(qtd>=20) return '';
-      if(qtd>=10) return `Faltam ${20-qtd} para R$ 25/contrato`;
-      if(qtd>=8)  return `Faltam ${10-qtd} para bonificação de R$ 15/contrato`;
-      return `Faltam ${8-qtd} para a meta mínima`;
-    }
-
-    // Mês atual
-    const bonifAtual=calcBonif(meuMes);
-    const nivelAtual=calcNivel(meuMes);
-    const painelAtual=document.getElementById('painel-mes-atual');
-    if(painelAtual) painelAtual.style.background=nivelAtual.bg;
-    const el_ca=document.getElementById('pm-contratos-atual');
-    if(el_ca){el_ca.textContent=meuMes;el_ca.className=`text-xl font-bold ${nivelAtual.cor}`;}
-    const el_ba=document.getElementById('pm-bonif-atual');
-    if(el_ba){
-      el_ba.className=`text-[11px] font-semibold mt-0.5 ${nivelAtual.cor}`;
-      el_ba.textContent=bonifAtual>0?`${nivelAtual.emoji} ${bonifAtual.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} este mês`:`${nivelAtual.emoji} ${nivelAtual.label}`;
-    }
-    const el_pa=document.getElementById('pm-proximo-atual');
-    if(el_pa){el_pa.textContent=textoProximo(meuMes);el_pa.className='text-[10px] text-gray-500 mt-1 leading-tight';}
 
     // Mês anterior
     const hjAnt=new Date(hj.getFullYear(),hj.getMonth()-1,1);
@@ -747,30 +865,107 @@ function atualizarKPIs(lista){
       const d=new Date(ref+'T12:00:00');
       return d.getMonth()===hjAnt.getMonth()&&d.getFullYear()===hjAnt.getFullYear();
     }).length;
+
+    // Contratos de ontem
+    const hjStr2=hj.toISOString().split('T')[0];
+    const ontem2=new Date(hj);ontem2.setDate(ontem2.getDate()-1);
+    const ontemStr2=ontem2.toISOString().split('T')[0];
+    const meusHoje=todosContratos.filter(c=>(c.dataContrato||c.dataFechamento)===hjStr2&&c.closer===usuarioAtual.nome).length;
+    const meusOntem=todosContratos.filter(c=>(c.dataContrato||c.dataFechamento)===ontemStr2&&c.closer===usuarioAtual.nome).length;
+    const emAltaPessoal=meusHoje>meusOntem&&meusHoje>0;
+
+    const nAtual=calcNivel(meuMes);
+    const nAnt=calcNivel(meuMesAnt);
+    const bonifAtual=calcBonif(meuMes);
     const bonifAnt=calcBonif(meuMesAnt);
-    const nivelAnt=calcNivel(meuMesAnt);
+    const diff=meuMes-meuMesAnt;
+    const pctMeta=Math.min(Math.round(meuMes/8*100),100);
+
+    // Fogo 🔥
+    const fireEl=document.getElementById('pm-fire');
+    if(fireEl) emAltaPessoal?fireEl.classList.remove('hidden'):fireEl.classList.add('hidden');
+
+    // Painel atual
+    const pAtual=document.getElementById('painel-mes-atual');
+    if(pAtual) pAtual.style.background=nAtual.bg;
+    const el_ca=document.getElementById('pm-contratos-atual');
+    if(el_ca){el_ca.textContent=meuMes;el_ca.className=`text-3xl font-bold count-anim ${nAtual.cor}`;}
+    const el_ba=document.getElementById('pm-bonif-atual');
+    if(el_ba){
+      el_ba.className=`text-[11px] font-semibold mt-1 ${nAtual.cor}`;
+      el_ba.textContent=bonifAtual>0?`${nAtual.emoji} ${bonifAtual.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} acumulados`:`${nAtual.emoji} ${nAtual.label}`;
+    }
+    const el_pa=document.getElementById('pm-proximo-atual');
+    if(el_pa){el_pa.textContent=textoProximo(meuMes);}
+    // Barra animada
+    const barMeta=document.getElementById('pm-bar-meta');
+    if(barMeta){
+      barMeta.style.setProperty('--bar-w',pctMeta+'%');
+      barMeta.style.background=nAtual.barCor;
+      setTimeout(()=>{barMeta.style.width=pctMeta+'%';},120);
+    }
+
+    // Painel anterior
     const labelAnt=document.getElementById('label-mes-anterior');
     if(labelAnt) labelAnt.textContent=hjAnt.toLocaleString('pt-BR',{month:'long'});
     const el_cp=document.getElementById('pm-contratos-anterior');
-    if(el_cp){el_cp.textContent=meuMesAnt;el_cp.className=`text-xl font-bold ${nivelAnt.cor}`;}
+    if(el_cp){el_cp.textContent=meuMesAnt;el_cp.className=`text-3xl font-bold count-anim ${nAnt.cor}`;}
     const el_bp=document.getElementById('pm-bonif-anterior');
     if(el_bp){
-      el_bp.className=`text-[11px] font-medium mt-0.5 ${bonifAnt>0?nivelAnt.cor:'text-gray-400'}`;
-      el_bp.textContent=bonifAnt>0?`${nivelAnt.emoji} ${bonifAnt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} recebidos`:`${meuMesAnt} contratos`;
+      el_bp.className=`text-[11px] font-medium mt-1 ${bonifAnt>0?nAnt.cor:'text-gray-400'}`;
+      el_bp.textContent=bonifAnt>0?`${nAnt.emoji} ${bonifAnt.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} recebidos`:`${meuMesAnt} contrato${meuMesAnt!==1?'s':''}`;
     }
-    // Comparativo
-    const diff=meuMes-meuMesAnt;
     const el_comp=document.getElementById('pm-comparativo');
     if(el_comp){
-      if(diff>0){el_comp.textContent=`▲ +${diff} em relação ao mês passado`;el_comp.className='text-[10px] text-green-600 mt-1 leading-tight font-medium';}
-      else if(diff<0){el_comp.textContent=`▼ ${diff} em relação ao mês passado`;el_comp.className='text-[10px] text-red-500 mt-1 leading-tight font-medium';}
-      else{el_comp.textContent='Igual ao mês passado';el_comp.className='text-[10px] text-gray-400 mt-1 leading-tight';}
+      if(diff>0){el_comp.textContent=`▲ +${diff} vs mês passado`;el_comp.className='text-[10px] text-green-600 leading-tight font-semibold';}
+      else if(diff<0){el_comp.textContent=`▼ ${diff} vs mês passado`;el_comp.className='text-[10px] text-red-500 leading-tight font-semibold';}
+      else{el_comp.textContent='Igual ao mês passado';el_comp.className='text-[10px] text-gray-400 leading-tight';}
     }
-    // Borda do card
-    const card=document.getElementById('card-minha-meta');
-    if(card){card.className=card.className.replace(/border-\S+/g,'border-gray-200').trim();card.classList.add(nivelAtual.borda);}
+    const cardM=document.getElementById('card-minha-meta');
+    if(cardM){cardM.className=cardM.className.replace(/border-\S+/g,'').trim()+' border-gray-200';cardM.classList.add(nAtual.borda);}
   }
 }
+window.toggleHistorico=function(){
+  const painel=document.getElementById('historico-panel');
+  const chevron=document.getElementById('historico-chevron');
+  if(!painel)return;
+  const aberto=!painel.classList.contains('hidden');
+  painel.classList.toggle('hidden',aberto);
+  if(chevron) chevron.style.transform=aberto?'':'rotate(180deg)';
+  if(!aberto && usuarioAtual){
+    const hj=new Date();
+    const conteudo=document.getElementById('historico-conteudo');
+    function calcBonif3(q){return q>=20?q*25:q>=10?q*15:0;}
+    const meses=[0,1,2].map(i=>{
+      const d=new Date(hj.getFullYear(),hj.getMonth()-i,1);
+      const qtd=todosContratos.filter(c=>{
+        const ref=c.dataContrato||c.dataFechamento;
+        if(!ref||c.closer!==usuarioAtual.nome)return false;
+        const dt=new Date(ref+'T12:00:00');
+        return dt.getMonth()===d.getMonth()&&dt.getFullYear()===d.getFullYear();
+      }).length;
+      const bonif=calcBonif3(qtd);
+      const tend=i===0&&qtd>0?'atual':i===1?'anterior':'2 meses atrás';
+      return{label:d.toLocaleString('pt-BR',{month:'long'}),qtd,bonif,tend};
+    });
+    const maxQtd=Math.max(...meses.map(m=>m.qtd),1);
+    const tendencia=meses[0].qtd>meses[1].qtd?'▲ Em crescimento':meses[0].qtd<meses[1].qtd?'▼ Queda em relação ao mês anterior':'→ Estável';
+    const tendCor=meses[0].qtd>meses[1].qtd?'text-green-600':meses[0].qtd<meses[1].qtd?'text-red-500':'text-gray-400';
+    if(conteudo) conteudo.innerHTML=
+      `<p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mb-3">Últimos 3 meses</p>`+
+      meses.map(m=>`
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-[11px] text-gray-600 w-24 flex-shrink-0 capitalize font-medium">${m.label}</span>
+          <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div class="h-2 rounded-full transition-all duration-500 ${m.qtd>=10?'bg-green-400':m.qtd>=8?'bg-green-300':'bg-brand-300'}" style="width:${Math.round(m.qtd/maxQtd*100)}%"></div>
+          </div>
+          <span class="text-[11px] font-bold text-gray-700 w-5 text-right">${m.qtd}</span>
+          <span class="text-[11px] text-gray-400 w-24 text-right">${m.bonif>0?m.bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):m.qtd>=8?'Meta atingida':'—'}</span>
+        </div>`).join('')+
+      `<div class="pt-2 border-t border-gray-100 mt-1"><span class="text-[11px] font-semibold ${tendCor}">${tendencia}</span></div>`;
+  }
+};
+
 window.filtrarKPI=function(s){
   document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
   if(s==='hoje'){
@@ -1105,6 +1300,14 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function abreviar(v){if(!v)return'—';const m={'SALÁRIO MATERNIDADE':'SAL. MATERNIDADE','BPC LOAS':'BPC LOAS','AUXÍLIO DOENÇA':'AUX. DOENÇA','APOSENTADORIA POR INVALIDEZ':'APOS. INVALIDEZ','APOSENTADORIA POR TEMPO DE CONTRIBUIÇÃO':'APOS. TEMPO','APOSENTADORIA ESPECIAL':'APOS. ESPECIAL','APOSENTADORIA RURAL':'APOS. RURAL','APOSENTADORIA POR IDADE':'APOS. IDADE','PENSÃO POR MORTE':'PENSÃO MORTE','AUXÍLIO-ACIDENTE':'AUX. ACIDENTE','AUXÍLIO RECLUSÃO':'AUX. RECLUSÃO','MANDADO DE SEGURANÇA':'MS','REVISÃO DE BENEFÍCIO':'REV. BENEFÍCIO','REVISÃO CONTRATO BANCÁRIO':'REV. CONTRATO','REVISÃO EMPRÉSTIMO CONSIGNADO':'REV. CONSIG.','NEGATIVAÇÃO INDEVIDA':'NEG. INDEVIDA','REVERTER JUSTA CAUSA':'JUSTA CAUSA','ACIDENTE DE TRABALHO':'ACID. TRABALHO'};return m[v]||v;}
 function badgeLocal(v){if(!v)return'<span class="text-xs text-gray-400">—</span>';const cfg={'INSS':'bg-blue-50 text-blue-700 border-blue-200','JUSTIÇA':'bg-violet-50 text-violet-700 border-violet-200'};return`<span class="inline-flex items-center text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${cfg[v]||'bg-gray-100 text-gray-600 border-gray-200'}">${esc(v)}</span>`;}
 function badgeStatus(v){const s=v||'EM ANDAMENTO';const cfg={'EM ANDAMENTO':{cls:'bg-sky-50 text-sky-700 border-sky-200',dot:'bg-sky-500',pulse:true},'PROTOCOLADO':{cls:'bg-amber-50 text-amber-700 border-amber-200',dot:'bg-amber-400'},'CONCEDIDO':{cls:'bg-green-50 text-green-700 border-green-200',dot:'bg-green-500'},'INDEFERIDO':{cls:'bg-orange-50 text-orange-700 border-orange-200',dot:'bg-orange-400'},'PERDIDO':{cls:'bg-red-50 text-red-700 border-red-200',dot:'bg-red-500'}};const c=cfg[s]||{cls:'bg-gray-100 text-gray-600 border-gray-200',dot:'bg-gray-400'};return`<span class="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded border ${c.cls}"><span class="w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}${c.pulse?' dot-pulse':''}"></span>${esc(s)}</span>`;}
+function mostrarToastContrato(nome,closer){
+  const el=document.createElement('div');
+  el.className='toast-in pointer-events-auto bg-green-600 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-xl max-w-xs';
+  el.innerHTML=`<div class="flex items-center gap-2"><span class="text-lg">🎉</span><div><p class="font-semibold">Novo contrato!</p><p class="text-xs text-green-100">${esc(nome)}${closer?' · '+esc(closer):''}</p></div></div>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(()=>{el.classList.replace('toast-in','toast-out');setTimeout(()=>el.remove(),350);},4500);
+}
+
 function mostrarToast(msg,tipo='info'){const bg={success:'bg-green-600',error:'bg-red-600',info:'bg-gray-700'}[tipo]||'bg-gray-700';const el=document.createElement('div');el.className=`toast-in pointer-events-auto ${bg} text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-lg max-w-xs`;el.textContent=msg;document.getElementById('toast-container').appendChild(el);setTimeout(()=>{el.classList.replace('toast-in','toast-out');setTimeout(()=>el.remove(),350);},3500);}
 function atualizarConexao(ok){const badge=document.getElementById('conn-badge'),dot=document.getElementById('conn-dot');badge.classList.remove('hidden');badge.classList.add('flex');badge.className=badge.className.replace(/bg-\S+/g,'')+(ok?' bg-green-50 text-green-700':' bg-red-50 text-red-700');dot.className='w-1.5 h-1.5 rounded-full '+(ok?'bg-green-500':'bg-red-500');document.getElementById('conn-text').textContent=ok?'Ao vivo':'Offline';}
 </script>
