@@ -122,20 +122,30 @@
 
   <main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-5">
     <!-- Meta -->
-    <div id="meta-bar" class="bg-white rounded-xl border border-gray-200 px-5 py-3 hidden">
-      <div class="flex items-center justify-between mb-1.5">
-        <span class="text-xs font-semibold text-gray-600" id="meta-label">Meta do mês</span>
-        <div class="flex items-center gap-2"><span class="text-xs text-gray-400" id="meta-detalhe"></span><button id="btn-meta-admin" onclick="definirMeta()" class="hidden text-[11px] text-brand-600 hover:underline">Definir meta</button></div>
-      </div>
-      <div class="w-full bg-gray-100 rounded-full h-2"><div id="meta-progress" class="h-2 rounded-full transition-all duration-500" style="width:0%"></div></div>
-    </div>
+    <!-- meta-bar removida: card Meu Mês no dashboard -->
 
     <!-- KPIs -->
     <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('')"><p class="text-xs text-gray-400 font-medium">Total</p><p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-total">0</p><p class="text-[11px] text-gray-400 mt-1" id="kpi-total-sub">Ver todos</p></div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('CONCEDIDO')"><p class="text-xs text-gray-400 font-medium">Concedidos</p><p class="text-2xl font-bold text-green-600 mt-0.5" id="kpi-concedidos">0</p><p class="text-[11px] text-green-500 mt-1" id="kpi-concedidos-pct">—</p></div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('PROTOCOLADO')"><p class="text-xs text-gray-400 font-medium">Protocolados</p><p class="text-2xl font-bold text-amber-600 mt-0.5" id="kpi-protocolado">0</p><p class="text-[11px] text-gray-400 mt-1" id="kpi-proto-pct">—</p></div>
-      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" onclick="filtrarKPI('PERDIDO')"><p class="text-xs text-gray-400 font-medium">Perdidos</p><p class="text-2xl font-bold text-red-500 mt-0.5" id="kpi-perdidos">0</p><p class="text-[11px] text-red-400 mt-1" id="kpi-perdidos-pct">—</p></div>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-hoje" onclick="filtrarKPI('hoje')">
+        <p class="text-xs text-gray-400 font-medium">Fechados Hoje</p>
+        <p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-hoje">0</p>
+        <p class="text-[11px] text-gray-400 mt-1" id="kpi-hoje-sub">contratos hoje</p>
+      </div>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-mes" onclick="filtrarKPI('mes')">
+        <p class="text-xs text-gray-400 font-medium">Fechados no Mês</p>
+        <p class="text-2xl font-bold text-brand-600 mt-0.5" id="kpi-mes">0</p>
+        <p class="text-[11px] text-gray-400 mt-1" id="kpi-mes-sub">—</p>
+      </div>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-total" onclick="filtrarKPI('')">
+        <p class="text-xs text-gray-400 font-medium">Total Geral</p>
+        <p class="text-2xl font-bold text-gray-700 mt-0.5" id="kpi-total">0</p>
+        <p class="text-[11px] text-gray-400 mt-1" id="kpi-total-sub">todos os contratos</p>
+      </div>
+      <div class="kpi-card bg-white rounded-xl border border-gray-200 px-4 py-3.5" id="card-minha-meta">
+        <p class="text-xs text-gray-400 font-medium">Meu Mês</p>
+        <p class="text-2xl font-bold mt-0.5" id="kpi-meu-mes">0</p>
+        <p class="text-[11px] mt-1" id="kpi-meu-mes-sub">—</p>
+      </div>
     </section>
 
     <!-- Filtros -->
@@ -562,7 +572,7 @@ function renderizarAuditoriaLista(logs){const el=document.getElementById('audito
 
 // Login
 window.fazerLogin=async function(){const nome=document.getElementById('login-nome').value.trim(),senha=document.getElementById('login-senha').value.trim();if(!nome){mostrarToast('Selecione seu nome.','error');return;}if(!senha){mostrarToast('Informe sua senha.','error');return;}setLoginLoad(true);await sleep(350);const col=equipe.find(e=>e.nome===nome&&e.ativo!==false);if(!col){mostrarToast('Usuário não encontrado.','error');setLoginLoad(false);return;}if(col.senha!==senha){mostrarToast('Senha incorreta.','error');setLoginLoad(false);return;}usuarioAtual={id:col.id,nome:col.nome,admin:col.admin===true};salvarSessao(usuarioAtual);await registrarPresenca();entrarNoApp();setLoginLoad(false);};
-function entrarNoApp(){document.getElementById('tela-login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-label').textContent=usuarioAtual.nome;document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();if(usuarioAtual.admin)['btn-equipe','btn-auditoria','btn-backup','btn-meta-admin','btn-financeiro'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));}
+function entrarNoApp(){document.getElementById('tela-login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-label').textContent=usuarioAtual.nome;document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();if(usuarioAtual.admin)['btn-equipe','btn-auditoria','btn-backup','btn-financeiro'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));}
 window.sair=async function(){await removerPresenca();limparSessao();usuarioAtual=null;document.getElementById('app').classList.add('hidden');document.getElementById('tela-login').classList.remove('hidden');document.getElementById('login-senha').value='';};
 window.toggleSenha=()=>{const el=document.getElementById('login-senha');el.type=el.type==='password'?'text':'password';};
 function setLoginLoad(v){document.getElementById('btn-login').disabled=v;document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar';document.getElementById('btn-login-spin').classList.toggle('hidden',!v);}
@@ -570,12 +580,93 @@ window.addEventListener('load',async()=>{const s=carregarSessao();if(s){usuarioA
 window.addEventListener('beforeunload',()=>removerPresenca());
 
 // Meta
-function atualizarMeta(){const el=document.getElementById('meta-bar');if(!el)return;if(metaMensal<=0){el.classList.add('hidden');return;}el.classList.remove('hidden');const hj=new Date(),fM=todosContratos.filter(c=>{if(!c.dataFechamento)return false;const d=new Date(c.dataFechamento);return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();}).length;const pct=Math.min(Math.round(fM/metaMensal*100),100);const cor=pct>=100?'bg-green-500':pct>=70?'bg-amber-400':'bg-brand-500';document.getElementById('meta-label').textContent=`Meta de ${hj.toLocaleString('pt-BR',{month:'long'})} — ${fM} de ${metaMensal} contratos`;document.getElementById('meta-detalhe').textContent=`${pct}%`;const bar=document.getElementById('meta-progress');bar.style.width=pct+'%';bar.className=`h-2 rounded-full transition-all duration-500 ${cor}`;}
+function atualizarMeta(){/* substituída pelo card Meu Mês */}
 window.definirMeta=async function(){const nova=prompt('Meta de contratos para este mês:');if(!nova||isNaN(parseInt(nova)))return;try{await setDoc(doc(db,COL_CFG,'geral'),{metaMensal:parseInt(nova)},{merge:true});mostrarToast('Meta definida!','success');}catch{mostrarToast('Erro.','error');}};
 
 // KPIs
-function atualizarKPIs(lista){const base=lista||todosContratos;const t=base.length,cv=base.filter(x=>x.status==='CONCEDIDO').length,p=base.filter(x=>x.status==='PROTOCOLADO').length,pe=base.filter(x=>x.status==='PERDIDO').length;document.getElementById('kpi-total').textContent=t;document.getElementById('kpi-concedidos').textContent=cv;document.getElementById('kpi-concedidos-pct').textContent=t?Math.round(cv/t*100)+'% do total':'—';document.getElementById('kpi-protocolado').textContent=p;document.getElementById('kpi-proto-pct').textContent=t?Math.round(p/t*100)+'% do total':'—';document.getElementById('kpi-perdidos').textContent=pe;document.getElementById('kpi-perdidos-pct').textContent=t?Math.round(pe/t*100)+'% do total':'—';}
-window.filtrarKPI=function(s){document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));const idx=['','CONCEDIDO','PROTOCOLADO','PERDIDO'].indexOf(s);if(idx>=0)document.querySelectorAll('.kpi-card')[idx]?.classList.add('ativo');document.getElementById('sel-status').value=s;aplicarFiltros();};
+function atualizarKPIs(lista){
+  const base=lista||todosContratos;
+  const hj=new Date();
+  const hjStr=hj.toISOString().split('T')[0];
+
+  // Fechados hoje
+  const hoje_=base.filter(c=>{const ref=c.dataContrato||c.dataFechamento;return ref===hjStr;}).length;
+
+  // Fechados no mês atual
+  const mes_=base.filter(c=>{const ref=c.dataContrato||c.dataFechamento;if(!ref)return false;const d=new Date(ref+'T12:00:00');return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();}).length;
+
+  // Total
+  const total_=base.length;
+
+  document.getElementById('kpi-hoje').textContent=hoje_;
+  document.getElementById('kpi-hoje-sub').textContent=hoje_===1?'contrato hoje':'contratos hoje';
+  document.getElementById('kpi-mes').textContent=mes_;
+  document.getElementById('kpi-mes-sub').textContent=hj.toLocaleString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('kpi-total').textContent=total_;
+  document.getElementById('kpi-total-sub').textContent=lista?'resultado filtrado':'todos os contratos';
+
+  // Card pessoal — minha meta
+  if(usuarioAtual){
+    const meuMes=todosContratos.filter(c=>{
+      const ref=c.dataContrato||c.dataFechamento;
+      if(!ref||c.closer!==usuarioAtual.nome)return false;
+      const d=new Date(ref+'T12:00:00');
+      return d.getMonth()===hj.getMonth()&&d.getFullYear()===hj.getFullYear();
+    }).length;
+
+    let bonif=0,nivel='';
+    if(meuMes>=20){bonif=meuMes*25;nivel='🏆 Nível Ouro';}
+    else if(meuMes>=10){bonif=meuMes*15;nivel='⭐ Bonificação ativa';}
+    else if(meuMes>=8){nivel='✅ Meta atingida';}
+    else{nivel=`${8-meuMes} para a meta`;}
+
+    const numEl=document.getElementById('kpi-meu-mes');
+    const subEl=document.getElementById('kpi-meu-mes-sub');
+    const card=document.getElementById('card-minha-meta');
+
+    numEl.textContent=meuMes;
+    card.className=card.className.replace(/border-\w+-\d+/g,'').trim();
+    if(meuMes>=20){
+      numEl.className='text-2xl font-bold mt-0.5 text-yellow-500';
+      card.classList.add('border-yellow-300');
+      subEl.className='text-[11px] mt-1 text-yellow-600 font-semibold';
+    } else if(meuMes>=10){
+      numEl.className='text-2xl font-bold mt-0.5 text-green-600';
+      card.classList.add('border-green-300');
+      subEl.className='text-[11px] mt-1 text-green-600 font-semibold';
+    } else if(meuMes>=8){
+      numEl.className='text-2xl font-bold mt-0.5 text-green-500';
+      subEl.className='text-[11px] mt-1 text-green-500 font-medium';
+    } else {
+      numEl.className='text-2xl font-bold mt-0.5 text-brand-600';
+      subEl.className='text-[11px] mt-1 text-gray-400';
+    }
+    subEl.textContent=bonif>0?`${nivel} · ${bonif.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`:nivel;
+  }
+}
+window.filtrarKPI=function(s){
+  document.querySelectorAll('.kpi-card').forEach(c=>c.classList.remove('ativo'));
+  if(s==='hoje'){
+    document.getElementById('card-hoje')?.classList.add('ativo');
+    const hjStr=new Date().toISOString().split('T')[0];
+    document.getElementById('sel-periodo').value='especifico';
+    document.getElementById('bloco-data-especifica').classList.remove('hidden');
+    document.getElementById('sel-data-de').value=hjStr;
+    document.getElementById('sel-data-ate').value=hjStr;
+    document.getElementById('sel-periodo').classList.add('ativo');
+    document.getElementById('sel-status').value='';
+  } else if(s==='mes'){
+    document.getElementById('card-mes')?.classList.add('ativo');
+    document.getElementById('sel-periodo').value='mes_atual';
+    document.getElementById('bloco-data-especifica').classList.add('hidden');
+    document.getElementById('sel-periodo').classList.add('ativo');
+    document.getElementById('sel-status').value='';
+  } else {
+    document.getElementById('card-total')?.classList.add('ativo');
+    document.getElementById('sel-status').value=s;
+  }
+  aplicarFiltros();
+};
 
 // Filtros
 window.onPeriodoChange=function(){const v=document.getElementById('sel-periodo').value;document.getElementById('bloco-data-especifica').classList.toggle('hidden',v!=='especifico');document.getElementById('sel-periodo').classList.toggle('ativo',!!v);if(v!=='especifico')aplicarFiltros();};
