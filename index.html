@@ -659,7 +659,7 @@ function entrarNoApp(){
   const selPeriodo=document.getElementById('sel-periodo');
   if(selPeriodo){selPeriodo.value='mes_atual';selPeriodo.classList.add('ativo');}
 }
-window.sair=async function(){await removerPresenca();limparSessao();usuarioAtual=null;document.getElementById('app').classList.add('hidden');document.getElementById('tela-login').classList.remove('hidden');document.getElementById('login-senha').value='';};
+window.sair=async function(){await removerPresenca();limparSessao();usuarioAtual=null;document.getElementById('app').classList.add('hidden');document.getElementById('tela-login').classList.remove('hidden');document.getElementById('login-senha').value='';document.getElementById('painel-gestora')?.classList.add('hidden');};
 window.toggleSenha=()=>{const el=document.getElementById('login-senha');el.type=el.type==='password'?'text':'password';};
 function setLoginLoad(v){document.getElementById('btn-login').disabled=v;document.getElementById('btn-login-txt').textContent=v?'Entrando…':'Entrar';document.getElementById('btn-login-spin').classList.toggle('hidden',!v);}
 window.addEventListener('load',async()=>{const s=carregarSessao();if(s){usuarioAtual=s;await registrarPresenca();entrarNoApp();}});
@@ -669,7 +669,12 @@ window.addEventListener('beforeunload',()=>removerPresenca());
 function atualizarMeta(){/* substituída pelo card Meu Mês */}
 
 function renderizarPainelGestora(){
-  if(!usuarioAtual?.admin)return;
+  const painelG=document.getElementById('painel-gestora');
+  if(!usuarioAtual?.admin){
+    if(painelG) painelG.classList.add('hidden');
+    return;
+  }
+  if(painelG) painelG.classList.remove('hidden');
   const hj=new Date();
   const hjStr=hj.toISOString().split('T')[0];
   const lista=document.getElementById('gestora-lista');
