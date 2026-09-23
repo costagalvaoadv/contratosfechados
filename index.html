@@ -610,6 +610,11 @@ onSnapshot(query(collection(db,COL_EQ),orderBy('nome')),snap=>{
 
 onSnapshot(query(collection(db,COL),orderBy('criadoEm','desc')),snap=>{
   todosContratos=snap.docs.map(d=>({id:d.id,...d.data()}));
+  // Garantir filtro mês atual ativo antes de renderizar
+  if(usuarioAtual){
+    const sp=document.getElementById('sel-periodo');
+    if(sp&&!sp.value){sp.value='mes_atual';sp.classList.add('ativo');}
+  }
   // Detectar novo contrato em tempo real
   const novoTotal=snap.docs.length;
   if(typeof window._ultimoTotal!=='undefined'&&novoTotal>window._ultimoTotal){
@@ -653,11 +658,13 @@ function entrarNoApp(){
   document.getElementById('user-avatar').textContent=usuarioAtual.nome.charAt(0).toUpperCase();
   if(usuarioAtual.admin){
     ['btn-equipe','btn-auditoria','btn-backup','btn-financeiro'].forEach(id=>document.getElementById(id)?.classList.remove('hidden'));
-    document.getElementById('painel-gestora')?.classList.remove('hidden');
   }
-  // Abrir já filtrado no mês atual
+  // Forçar filtro mês atual ANTES de qualquer renderização
   const selPeriodo=document.getElementById('sel-periodo');
   if(selPeriodo){selPeriodo.value='mes_atual';selPeriodo.classList.add('ativo');}
+  // Renderizar imediatamente com o filtro já ativo
+  aplicarFiltros();
+  renderizarPainelGestora();
 }
 window.sair=async function(){await removerPresenca();limparSessao();usuarioAtual=null;document.getElementById('app').classList.add('hidden');document.getElementById('tela-login').classList.remove('hidden');document.getElementById('login-senha').value='';document.getElementById('painel-gestora')?.classList.add('hidden');};
 window.toggleSenha=()=>{const el=document.getElementById('login-senha');el.type=el.type==='password'?'text':'password';};
